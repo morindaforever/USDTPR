@@ -8,9 +8,12 @@
   command = "npm run build"
   publish = "dist"
 
-# SPA fallback: every unknown path serves the app shell; React Router
-# renders the right page (including /admin, /signup, /transactions/...).
-# frontend/public/_redirects contains the same rule for manual deploys.
+[[redirects]]
+  from = "/api/*"
+  to = "https://usdtpr.onrender.com/api/:splat"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
