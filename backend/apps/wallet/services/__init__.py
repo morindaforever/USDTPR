@@ -1,0 +1,49 @@
+"""Wallet service package — the single entry point for balance mutations."""
+
+from .errors import (
+    DuplicateTransactionError,
+    InsufficientBalanceError,
+    InvalidAmountError,
+    InvalidBalanceTypeError,
+    InvalidTransactionError,
+    WalletError,
+    WalletNotFoundError,
+)
+from .wallet_service import (
+    admin_adjust,
+    credit,
+    debit,
+    ensure_wallet,
+    finalize_locked,
+    get_wallet,
+    get_wallet_summary,
+    lock,
+    normalize_amount,
+    reconcile_wallet,
+    release_lock,
+    reverse_transaction,
+    transfer_between_balances,
+)
+
+__all__ = [
+    'DuplicateTransactionError',
+    'InsufficientBalanceError',
+    'InvalidAmountError',
+    'InvalidBalanceTypeError',
+    'InvalidTransactionError',
+    'WalletError',
+    'WalletNotFoundError',
+    'admin_adjust',
+    'credit',
+    'debit',
+    'ensure_wallet',
+    'finalize_locked',
+    'get_wallet',
+    'get_wallet_summary',
+    'lock',
+    'normalize_amount',
+    'reconcile_wallet',
+    'release_lock',
+    'reverse_transaction',
+    'transfer_between_balances',
+]

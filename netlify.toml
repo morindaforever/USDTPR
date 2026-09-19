@@ -1,0 +1,17 @@
+# Netlify configuration for the NexusUSDT frontend.
+# Used by git-based and `netlify build` deploys; for drag-and-drop deploys
+# publish the frontend/dist folder itself (the SPA redirect ships inside it
+# as frontend/public/_redirects -> dist/_redirects).
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+# SPA fallback: every unknown path serves the app shell; React Router
+# renders the right page (including /admin, /signup, /transactions/...).
+# frontend/public/_redirects contains the same rule for manual deploys.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

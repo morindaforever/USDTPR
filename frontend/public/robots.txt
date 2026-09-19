@@ -1,0 +1,15 @@
+# NexusUSDT
+# Public marketing pages may be indexed; authenticated app surfaces must not.
+User-agent: *
+Allow: /
+Disallow: /home
+Disallow: /account
+Disallow: /deposit
+Disallow: /withdraw
+Disallow: /team
+Disallow: /transactions
+Disallow: /notifications
+Disallow: /support
+Disallow: /vip
+Disallow: /admin
+Disallow: /api/
