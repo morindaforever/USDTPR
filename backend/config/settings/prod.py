@@ -57,7 +57,10 @@ _cors = env.list('CORS_ALLOWED_ORIGINS', default=[])
 if not _cors:
     raise ImproperlyConfigured('CORS_ALLOWED_ORIGINS must list the real frontend origin(s).')
 CORS_ALLOWED_ORIGINS = _cors
+CORS_ALLOW_CREDENTIALS = env.bool('CORS_ALLOW_CREDENTIALS', default=True)
 
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
 # ---------------------------------------------------------------------------
 # DRF — anonymous traffic throttled harder in production; keep the dev rates
 # for authenticated users (base defaults).
