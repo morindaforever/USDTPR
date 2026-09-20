@@ -7,6 +7,7 @@ import type {
   AdminAuditLog,
   AdminCommissionRow,
   AdminDashboard,
+  AdminDepositAddressRow,
   AdminDepositRow,
   AdminNetworkRow,
   AdminNotification,
@@ -79,6 +80,23 @@ export const adminService = {
   },
   depositScreenshot(depositId: string): Promise<Blob> {
     return apiGetBlob(`/admin/deposits/${depositId}/screenshot/`);
+  },
+
+  // Deposit addresses ---------------------------------------------------------
+  // The receiving-address manager lives on the deposits admin mount
+  // (/api/admin-panel/). POST auto-deactivates the previous active address
+  // for the same network; PATCH edits or (de)activates a row.
+  depositAddresses(): Promise<ApiEnvelope<AdminDepositAddressRow[]>> {
+    return apiGet('/admin-panel/deposit-addresses/');
+  },
+  createDepositAddress(network: string, address: string): Promise<ApiEnvelope<AdminDepositAddressRow>> {
+    return apiPost('/admin-panel/deposit-addresses/', { network, address });
+  },
+  updateDepositAddress(
+    id: number,
+    payload: { address?: string; is_active?: boolean },
+  ): Promise<ApiEnvelope<AdminDepositAddressRow>> {
+    return apiPatch(`/admin-panel/deposit-addresses/${id}/`, payload);
   },
 
   // Withdrawals ---------------------------------------------------------------

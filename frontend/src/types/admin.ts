@@ -68,6 +68,17 @@ export interface AdminDepositRow {
   verification_status?: 'MANUAL_VERIFICATION' | 'ON_CHAIN_VERIFIED';
 }
 
+/** Deposit-address row (GET/POST/PATCH /api/admin-panel/deposit-addresses/). */
+export interface AdminDepositAddressRow {
+  id: number;
+  network: string;
+  network_name: string;
+  asset: string;
+  address: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 /** Network configuration row (GET/PATCH /api/admin-panel/networks/). */
 export interface AdminNetworkRow {
   id: number;

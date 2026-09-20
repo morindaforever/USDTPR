@@ -8,6 +8,7 @@ const AdminDashboardPage = lazy(async () => ({ default: (await import('@/pages/a
 const AdminUsersPage = lazy(async () => ({ default: (await import('@/pages/admin/AdminUsersPage')).AdminUsersPage }));
 const AdminUserDetailPage = lazy(async () => ({ default: (await import('@/pages/admin/AdminUserDetailPage')).AdminUserDetailPage }));
 const AdminDepositsPage = lazy(async () => ({ default: (await import('@/pages/admin/AdminDepositsPage')).AdminDepositsPage }));
+const AdminDepositAddressesPage = lazy(async () => ({ default: (await import('@/pages/admin/AdminDepositAddressesPage')).AdminDepositAddressesPage }));
 const AdminWithdrawalsPage = lazy(async () => ({ default: (await import('@/pages/admin/AdminWithdrawalsPage')).AdminWithdrawalsPage }));
 const AdminVipPlansPage = lazy(async () => ({ default: (await import('@/pages/admin/AdminVipPlansPage')).AdminVipPlansPage }));
 const AdminVipPurchasesPage = lazy(async () => ({ default: (await import('@/pages/admin/AdminVipPurchasesPage')).AdminVipPurchasesPage }));
@@ -55,6 +56,7 @@ export default function AdminRoutes() {
           <Route path="users" element={suspense(<AdminUsersPage />)} />
           <Route path="users/:userId" element={suspense(<AdminUserDetailPage />)} />
           <Route path="deposits" element={suspense(<AdminDepositsPage />)} />
+          <Route path="deposit-addresses" element={suspense(<AdminDepositAddressesPage />)} />
           <Route path="withdrawals" element={suspense(<AdminWithdrawalsPage />)} />
           <Route path="vip-plans" element={suspense(<AdminVipPlansPage />)} />
           <Route path="vip-purchases" element={suspense(<AdminVipPurchasesPage />)} />
