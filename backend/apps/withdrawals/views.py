@@ -13,13 +13,14 @@ network, address, amount, and an idempotency key.
 
 from decimal import Decimal
 
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.core.exceptions import api_exception_handler
+from apps.core.uploads import validate_user_image
 from apps.deposits.admin_permissions import IsAdminUser
 from apps.wallet.models import Network
 from apps.wallet.pagination import EnvelopePagination
@@ -82,6 +83,8 @@ class NetworkListView(_AuthedAPIView):
                 'name': n.name,
                 'asset': n.asset,
                 'address_hint': address_hint(n.code),
+                'network_warning': n.network_warning,
+                'instructions': n.instructions,
             }
             for n in rows
         ]
@@ -92,13 +95,16 @@ class RulesView(_AuthedAPIView):
     """GET /api/withdrawals/rules/ — public withdrawal rules (§46).
 
     Only user-relevant values are exposed; internal SiteSetting keys and
-    admin-only configuration stay behind the admin surface.
+    admin-only configuration stay behind the admin surface. Accepts an
+    optional ``?network=CODE`` for the per-network override.
     """
 
     def get(self, request):
-        minimum = config.get_min_amount()
-        fee_type = config.get_fee_type()
-        fee_amount = config.get_fee_amount()
+        code = (request.query_params.get('network') or '').strip().upper()
+        network = Network.objects.filter(code=code, is_active=True).first() if code else None
+        minimum = config.get_min_amount(network)
+        fee_type = config.get_fee_type(network)
+        fee_amount = config.get_fee_amount(network)
         return _envelope({
             'minimum_amount': str(minimum.quantize(Decimal('0.01'))),
             'fee_type': fee_type,
@@ -168,6 +174,15 @@ class WithdrawalListCreateView(_AuthedAPIView):
         serializer = WithdrawalCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         v = serializer.validated_data
+        qr_image = v.get('qr_image')
+        if qr_image is not None:
+            try:
+                validate_user_image(qr_image)
+            except serializers.ValidationError as exc:
+                return Response(
+                    {'success': False, 'message': 'Please correct the highlighted fields.', 'errors': exc.detail},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         try:
             withdrawal, created = services.create_withdrawal(
                 user=request.user,
@@ -175,6 +190,7 @@ class WithdrawalListCreateView(_AuthedAPIView):
                 destination_address=v['destination_address'],
                 amount=v['amount'],
                 idempotency_key=v['idempotency_key'],
+                qr_image=qr_image,
             )
         except services.WithdrawalError as exc:
             return _domain_error(exc)
@@ -244,6 +260,33 @@ class AdminWithdrawalDetailView(_AdminAPIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
         return _envelope(WithdrawalAdminSerializer(withdrawal).data)
+
+
+class AdminWithdrawalQRView(_AdminAPIView):
+    """GET /api/admin-panel/withdrawals/<withdrawal_id>/qr/ — staff-only image.
+
+    Private-media proxy for the optional user-uploaded QR image (§7). The
+    typed wallet address — not the QR — is the authoritative destination.
+    """
+
+    def get(self, request, withdrawal_id: str):
+        withdrawal = Withdrawal.objects.filter(withdrawal_id=withdrawal_id).first()
+        if withdrawal is None or not withdrawal.qr_image:
+            return Response(
+                {'success': False, 'message': 'QR image not found.', 'errors': {}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        from django.core.files.storage import default_storage
+
+        if not default_storage.exists(withdrawal.qr_image.name):
+            return Response(
+                {'success': False, 'message': 'QR image file is missing.', 'errors': {}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        with default_storage.open(withdrawal.qr_image.name, 'rb') as handle:
+            from django.http import FileResponse
+
+            return FileResponse(handle, content_type='application/octet-stream')
 
 
 class AdminWithdrawalActionView(_AdminAPIView):
@@ -351,6 +394,7 @@ __all__ = [
     'WithdrawalDetailView',
     'AdminWithdrawalListView',
     'AdminWithdrawalDetailView',
+    'AdminWithdrawalQRView',
     'AdminWithdrawalActionView',
     'AdminApproveView',
     'AdminRejectView',

@@ -8,11 +8,19 @@ Purchase flow (all inside ONE database transaction):
       → lock wallet row (wallet service does select_for_update)
       → idempotency check (purchase.idempotency_key unique per user)
       → welcome-claim guard (at most one WELCOME purchase per user)
-      → debit investment via wallet service (raises on insufficient funds;
+      → debit investment across buckets via wallet service (deposit
+        balance first, then withdrawable; raises on insufficient funds;
         rolls back everything on any failure)
       → create VIPPurchase with SNAPSHOT of plan terms
       → audit log + notification
       → commit
+
+Spend order: approved deposits credit the DEPOSIT bucket, so purchases
+spend DEPOSIT first and fall back to WITHDRAWABLE — a fresh deposit is
+spendable on plans immediately, while referral commissions and VIP rewards
+(credited to WITHDRAWABLE) are touched only after the deposit bucket is
+drained. The combined check happens server-side under the wallet lock; the
+frontend never decides affordability.
 
 Concurrency: two simultaneous purchases serialize on the wallet row lock —
 the second sees the post-debit balance and is rejected if short.
@@ -37,7 +45,16 @@ from apps.accounts.models import User
 from apps.core.models import AuditLog
 from apps.notifications.models import Notification
 from apps.notifications.services import notify_event
-from apps.wallet.services import InsufficientBalanceError, WalletError, debit, get_wallet_summary
+from apps.wallet.services import (
+    InsufficientBalanceError,
+    WalletError,
+    debit_across,
+    get_wallet_summary,
+)
+
+# Buckets a purchase may spend, in order: deposit balance (from approved
+# deposits) first, then withdrawable balance (commissions, rewards, bonuses).
+SPEND_ORDER = ('DEPOSIT', 'WITHDRAWABLE')
 
 from .models import VIPPlan, VIPPurchase
 
@@ -144,10 +161,10 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
     # idempotency key protect them instead.
     if purchase.investment_amount > 0:
         try:
-            debit(
+            debit_across(
                 user=user,
                 amount=purchase.investment_amount,
-                balance_type='WITHDRAWABLE',
+                balance_types=SPEND_ORDER,
                 transaction_type='VIP_PURCHASE',
                 reference_type='vip_purchase',
                 reference_id=purchase.purchase_id,
@@ -157,8 +174,9 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
         except InsufficientBalanceError as exc:
             # Translate into the VIP domain error → 400 with safe message.
             raise VIPError(
-                'Insufficient withdrawable balance for this plan.',
-                {'balance': ['Insufficient withdrawable balance for this plan.']},
+                'Insufficient balance for this plan. Your deposit balance and '
+                'withdrawable balance are combined for purchases.',
+                {'balance': ['Insufficient combined balance for this plan.']},
             ) from exc
         except WalletError as exc:
             # Any other wallet failure → roll back purchase too.
@@ -191,9 +209,16 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
 
 
 def plan_purchase_summary(user: User, plan: VIPPlan) -> dict:
-    """Authoritative data for the purchase-confirmation modal."""
+    """Authoritative data for the purchase-confirmation modal.
+
+    ``available_balance`` is the combined spendable balance (deposit +
+    withdrawable — the same buckets ``purchase_plan`` debits), so the modal
+    can never contradict what the purchase would actually accept.
+    """
     summary = get_wallet_summary(user)
-    available = summary['withdrawable_balance']
+    available = (
+        summary['deposit_balance'] + summary['withdrawable_balance']
+    ).quantize(Decimal('0.00000001'))
     return {
         'available_balance': available,
         'balance_after_purchase': (available - plan.investment_amount).quantize(Decimal('0.00000001')),

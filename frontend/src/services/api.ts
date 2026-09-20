@@ -4,7 +4,6 @@ import axios, {
   type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
 } from 'axios';
-import type { ApiError } from '@/types';
 
 /**
  * Base URL resolution:
@@ -92,7 +91,25 @@ export async function tryRefreshAccessToken(): Promise<boolean> {
 }
 
 /**
- * Response interceptor — normalize every failure into an `ApiError`
+ * Normalized API failure. Extends Error so `catch (err)` blocks using the
+ * idiomatic `err instanceof Error ? err.message : fallback` pattern surface
+ * the REAL backend message (envelope `message`, DRF `detail`, or the first
+ * field error) instead of their generic fallback text.
+ */
+export class ApiRequestError extends Error {
+  status: number | null;
+  detail: unknown;
+
+  constructor(status: number | null, message: string, detail?: unknown) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
+/**
+ * Response interceptor — normalize every failure into an `ApiRequestError`
  * and transparently retry once after a successful token refresh.
  */
 api.interceptors.response.use(
@@ -114,12 +131,13 @@ api.interceptors.response.use(
       window.dispatchEvent(new CustomEvent('auth:expired'));
     }
 
-    const normalized: ApiError = {
-      status: error.response?.status ?? null,
-      message: extractErrorMessage(error),
-      detail: error.response?.data,
-    };
-    return Promise.reject(normalized);
+    return Promise.reject(
+      new ApiRequestError(
+        error.response?.status ?? null,
+        extractErrorMessage(error),
+        error.response?.data,
+      ),
+    );
   },
 );
 
@@ -193,5 +211,30 @@ export async function apiPatch<T>(
   config?: AxiosRequestConfig,
 ): Promise<T> {
   const response = await api.patch<T>(url, body, config);
+  return response.data;
+}
+
+/**
+ * POST with a FormData body (file uploads). Lets the browser set the
+ * multipart Content-Type boundary — the default header is dropped.
+ */
+export async function apiPostForm<T>(
+  url: string,
+  formData: FormData,
+  config?: AxiosRequestConfig,
+): Promise<T> {
+  const response = await api.post<T>(url, formData, {
+    ...config,
+    headers: { 'Content-Type': undefined, ...config?.headers },
+  });
+  return response.data;
+}
+
+/** GET a binary response (e.g. private-media images served through auth). */
+export async function apiGetBlob(url: string, config?: AxiosRequestConfig): Promise<Blob> {
+  const response = await api.get<Blob>(url, {
+    ...config,
+    responseType: 'blob',
+  });
   return response.data;
 }

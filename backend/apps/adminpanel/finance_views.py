@@ -75,6 +75,38 @@ class AdminDepositDetailView(AdminAPIView):
         return _Detail.as_view()(request._request, deposit_id=deposit_id)
 
 
+class AdminDepositNoteView(AdminAPIView):
+    """PATCH /api/admin/deposits/<deposit_id>/note/ — reviewer note (§2)."""
+
+    def patch(self, request, deposit_id: str):
+        from apps.deposits.admin_views import AdminDepositNoteView as _Note
+
+        return _Note.as_view()(request._request, deposit_id=deposit_id)
+
+
+class AdminDepositScreenshotView(AdminAPIView):
+    """GET /api/admin/deposits/<deposit_id>/screenshot/ — staff-only image."""
+
+    def get(self, request, deposit_id: str):
+        from apps.deposits.admin_views import AdminDepositScreenshotView as _Shot
+
+        return _Shot.as_view()(request._request, deposit_id=deposit_id)
+
+
+class AdminNetworkConfigListView(AdminAPIView):
+    """GET/PATCH /api/admin/networks/ — per-network deposit/withdrawal config."""
+
+    def get(self, request):
+        from apps.deposits.admin_views import AdminNetworkListView as _List
+
+        return _List.as_view()(request._request)
+
+    def patch(self, request, pk: int):
+        from apps.deposits.admin_views import AdminNetworkListView as _List
+
+        return _List.as_view()(request._request, pk=pk)
+
+
 class AdminDepositActionView(AdminAPIView):
     """POST /api/admin/deposits/<deposit_id>/approve|reject/ (§20–21)."""
 
@@ -102,9 +134,9 @@ class AdminDepositActionView(AdminAPIView):
         return envelope({'deposit': __import__('apps.deposits.serializers', fromlist=['DepositSerializer']).DepositSerializer(deposit).data}, message=message)
 
 
-# --------------------------------------------------------------------------- #
-# Withdrawals (§24–29) — reuse the Section 10 state machine functions.
-# --------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------- #    # --------------------------------------------------------------------------- #
+    # Withdrawals (§24–29) — reuse the Section 10 state machine functions.
+    # --------------------------------------------------------------------------- #
 class AdminWithdrawalListView(AdminAPIView):
     def get(self, request):
         from apps.withdrawals.views import AdminWithdrawalListView as _List
@@ -117,6 +149,15 @@ class AdminWithdrawalDetailView(AdminAPIView):
         from apps.withdrawals.views import AdminWithdrawalDetailView as _Detail
 
         return _Detail.as_view()(request._request, withdrawal_id=withdrawal_id)
+
+
+class AdminWithdrawalQRView(AdminAPIView):
+    """GET /api/admin/withdrawals/<withdrawal_id>/qr/ — staff-only image."""
+
+    def get(self, request, withdrawal_id: str):
+        from apps.withdrawals.views import AdminWithdrawalQRView as _QR
+
+        return _QR.as_view()(request._request, withdrawal_id=withdrawal_id)
 
 
 class AdminWithdrawalActionView(AdminAPIView):

@@ -42,6 +42,7 @@ export function WithdrawPage() {
   const [networkCode, setNetworkCode] = useState<string | null>(null);
   const [address, setAddress] = useState('');
   const [amount, setAmount] = useState('');
+  const [qrImage, setQrImage] = useState<File | null>(null);
   const [quote, setQuote] = useState<WithdrawalQuote | null>(null);
 
   // Confirmation + submission state
@@ -72,8 +73,14 @@ export function WithdrawPage() {
     if (trimmed.length === 0) return null;
     const value = Number(trimmed);
     if (Number.isNaN(value) || value <= 0) return 'Enter a valid amount.';
+    if (summary && value > Number(summary.withdrawable_balance)) {
+      return (
+        `Amount exceeds your withdrawable balance (${formatUsdt(summary.withdrawable_balance)} USDT). ` +
+        'Only VIP plan profits and referral commissions are withdrawable.'
+      );
+    }
     return null;
-  }, [amount]);
+  }, [amount, summary]);
 
   // Debounced server quote whenever amount/network changes (§47).
   useEffect(() => {
@@ -123,6 +130,7 @@ export function WithdrawPage() {
         destination_address: address.trim(),
         amount,
         idempotency_key: idempotencyKey,
+        qr_image: qrImage,
       });
       if (!envelope.success || !envelope.data) {
         setSubmitError(envelope.message || 'Unable to submit the withdrawal.');
@@ -132,6 +140,7 @@ export function WithdrawPage() {
       setConfirmOpen(false);
       setAmount('');
       setAddress('');
+      setQrImage(null);
       setQuote(null);
       historyQuery.retry();
       summaryQuery.retry();
@@ -142,7 +151,7 @@ export function WithdrawPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [networkCode, address, amount, submitting, historyQuery, summaryQuery]);
+  }, [networkCode, address, amount, qrImage, submitting, historyQuery, summaryQuery]);
 
   const handleMax = useCallback(() => {
     if (summary && Number(summary.withdrawable_balance) > 0) {
@@ -173,10 +182,12 @@ export function WithdrawPage() {
         <div className="flex gap-3 rounded-xl bg-sky-50 p-3.5 text-sky-900 ring-1 ring-inset ring-sky-200">
           <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
           <div className="text-sm">
-            <p className="font-semibold">Withdrawal Review</p>
+            <p className="font-semibold">Withdrawable balance rules</p>
             <p className="mt-0.5 opacity-90">
-              Withdrawals are reviewed and processed manually by the platform team. Requests lock your funds immediately and appear
-              below with their review status.
+              Withdrawals can only use your <strong>withdrawable balance</strong> — funded by VIP plan
+              profits and referral commissions. Your deposit balance is used to buy VIP plans and cannot
+              be withdrawn. Requests are reviewed and processed manually by the platform team and lock
+              your funds immediately.
             </p>
           </div>
         </div>
@@ -214,6 +225,15 @@ export function WithdrawPage() {
           )}
         </section>
 
+        {/* Zero-withdrawable explainer — deposits are for plans, not payouts */}
+        {summary && Number(summary.withdrawable_balance) <= 0 && (
+          <Alert tone="warning" title="No withdrawable balance yet">
+            Your withdrawable balance is 0.00 USDT. It grows as your VIP plan profits and referral
+            commissions are credited. Deposit balance is used to purchase VIP plans and cannot be
+            withdrawn.
+          </Alert>
+        )}
+
         {/* Withdrawal request form */}
         <section aria-labelledby="request-heading" className="rounded-2xl border border-surface-200 bg-white p-5">
           <h2 id="request-heading" className="mb-4 text-sm font-semibold text-surface-900">
@@ -237,6 +257,7 @@ export function WithdrawPage() {
                 onChange={(code) => {
                   setNetworkCode(code);
                   setAddress('');
+                  setQrImage(null);
                   setQuote(null);
                 }}
               />
@@ -255,9 +276,37 @@ export function WithdrawPage() {
                   onMax={handleMax}
                   onSubmit={() => {
                     setSubmitError(null);
+                    if (amountError) return; // validity/balance guard — the backend re-validates
                     setConfirmOpen(true);
                   }}
                 />
+              </div>
+
+              {/* Optional QR destination image (§7) — the typed address
+                  above remains the authoritative destination. */}
+              <div className="mt-5">
+                <label
+                  htmlFor="withdrawal-qr"
+                  className="mb-1.5 block text-sm font-medium text-surface-700"
+                >
+                  Wallet QR image <span className="font-normal text-surface-400">(optional)</span>
+                </label>
+                <input
+                  id="withdrawal-qr"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(event) => {
+                    setQrImage(event.target.files?.[0] ?? null);
+                    event.target.value = '';
+                  }}
+                  className="block w-full cursor-pointer rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+                />
+                {qrImage && (
+                  <p className="mt-1.5 text-xs text-surface-500">
+                    Attached: {qrImage.name} — reviewers see this for context;
+                    the typed address is always the payout destination.
+                  </p>
+                )}
               </div>
             </>
           )}

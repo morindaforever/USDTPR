@@ -4,6 +4,8 @@ Business logic lives in services.py. ``/vip/current/`` (Section 4) remains;
 the Section 7 endpoints add plan browsing, purchase, and history.
 """
 
+from decimal import Decimal
+
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -231,7 +233,12 @@ class PurchaseView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        remaining = get_wallet_summary(request.user)['withdrawable_balance']
+        # Combined spendable remaining (deposit + withdrawable) — matches
+        # what the next purchase could actually spend.
+        summary = get_wallet_summary(request.user)
+        remaining = (summary['deposit_balance'] + summary['withdrawable_balance']).quantize(
+            Decimal('0.00000001')
+        )
         message = (
             'Purchase already completed previously.'
             if result.already_existed

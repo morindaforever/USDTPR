@@ -72,6 +72,7 @@ def _balance(user: User) -> dict:
     return {
         'withdrawable': summary['withdrawable_balance'],
         'locked': summary['locked_balance'],
+        'deposit': summary['deposit_balance'],
     }
 
 
@@ -242,7 +243,7 @@ class WithdrawalCreationTests(TestCase):
 
     def test_insufficient_balance_atomic(self) -> None:
         _fund(self.user, '10')
-        with self.assertRaises(InsufficientBalanceError):
+        with self.assertRaises(WithdrawalError) as ctx:
             create_withdrawal(
                 user=self.user,
                 network_code='TRX',
@@ -250,8 +251,38 @@ class WithdrawalCreationTests(TestCase):
                 amount=Decimal('12.00'),
                 idempotency_key='wd-over-1',
             )
+        self.assertIn('Insufficient withdrawable balance', ctx.exception.message)
+        self.assertIn('VIP plan profits', ctx.exception.message)
         self.assertEqual(Withdrawal.objects.filter(user=self.user).count(), 0)
         self.assertEqual(_balance(self.user)['withdrawable'], Decimal('10.00'))
+
+    def test_deposit_balance_is_not_withdrawable(self) -> None:
+        """The reported production scenario: plenty of DEPOSIT balance, zero
+        withdrawable — the request must be rejected with a clear reason."""
+        from apps.wallet.models import WalletTransaction
+        from apps.wallet.services import credit
+
+        credit(
+            user=self.user,
+            amount='500',
+            balance_type=WalletTransaction.BalanceType.DEPOSIT,
+            transaction_type=WalletTransaction.TransactionType.DEPOSIT,
+            idempotency_key='dep-only-1',
+        )
+        self.assertEqual(_balance(self.user)['deposit'], Decimal('500.00'))
+        self.assertEqual(_balance(self.user)['withdrawable'], Decimal('0.00'))
+        with self.assertRaises(WithdrawalError) as ctx:
+            create_withdrawal(
+                user=self.user,
+                network_code='TRX',
+                destination_address=TRON_ADDRESS,
+                amount=Decimal('10.00'),
+                idempotency_key='dep-only-wdr-1',
+            )
+        self.assertIn('Insufficient withdrawable balance', ctx.exception.message)
+        self.assertIn('referral commissions', ctx.exception.message)
+        self.assertEqual(Withdrawal.objects.filter(user=self.user).count(), 0)
+        self.assertEqual(_balance(self.user)['deposit'], Decimal('500.00'))
 
     def test_validation_failures(self) -> None:
         _fund(self.user, '50')
@@ -469,7 +500,7 @@ class WithdrawalConcurrencyTests(TransactionTestCase):
         for thread in threads:
             thread.join(timeout=15)
 
-        self.assertEqual(sorted(results), ['InsufficientBalanceError', 'ok'])
+        self.assertEqual(sorted(results), ['WithdrawalError', 'ok'])
         self.assertEqual(Withdrawal.objects.filter(user=self.user).count(), 1)
         balances = _balance(self.user)
         self.assertEqual(balances['withdrawable'], Decimal('5.00'))

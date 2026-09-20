@@ -13,7 +13,7 @@ from apps.accounts.models import User
 from apps.core.models import AuditLog
 from apps.notifications.models import Notification
 from apps.vip.models import VIPPlan, VIPPurchase
-from apps.vip.services import VIPError, purchase_plan
+from apps.vip.services import VIPError, plan_purchase_summary, purchase_plan
 from apps.wallet.models import Wallet, WalletTransaction
 from apps.wallet.services import credit
 
@@ -246,6 +246,58 @@ class PurchaseEndpointTests(VIPTestBase):
         )
         ids = [row['purchase_id'] for row in res.json()['data']]
         self.assertNotIn(purchase.purchase_id, ids)
+
+
+class DepositBucketPurchaseTests(VIPTestBase):
+    """Purchases spend the deposit bucket first, then withdrawable.
+
+    Approved deposits credit DEPOSIT balance; a plan bought right after a
+    deposit must work with no manual conversion step.
+    """
+
+    def test_purchase_spends_deposit_balance_first(self) -> None:
+        credit(
+            user=self.user, amount='50', balance_type=WalletTransaction.BalanceType.DEPOSIT,
+            transaction_type=TT.DEPOSIT, reference_type='deposit', idempotency_key='depbuy-seed-1',
+        )
+        purchase = self.buy(self.plan1, 'dep-buy-1')  # VIP 1 = 10 USDT
+        self.assertEqual(purchase.status, VIPPurchase.Status.ACTIVE)
+        self.refresh()
+        self.assertEqual(self.wallet().deposit_balance, Decimal('40.00000000'))
+        self.assertEqual(self.wallet().withdrawable_balance, Decimal('100.00000000'))
+        self.assertEqual(self.wallet().total_balance, Decimal('140.00000000'))
+
+    def test_purchase_falls_back_across_buckets(self) -> None:
+        credit(
+            user=self.user, amount='4', balance_type=WalletTransaction.BalanceType.DEPOSIT,
+            transaction_type=TT.DEPOSIT, reference_type='deposit', idempotency_key='depbuy-seed-2',
+        )
+        purchase = self.buy(self.plan1, 'dep-buy-2')  # 10 = 4 deposit + 6 withdrawable
+        self.assertEqual(purchase.status, VIPPurchase.Status.ACTIVE)
+        self.refresh()
+        self.assertEqual(self.wallet().deposit_balance, Decimal('0.00000000'))
+        self.assertEqual(self.wallet().withdrawable_balance, Decimal('94.00000000'))
+        rows = WalletTransaction.objects.filter(
+            user=self.user, transaction_type=TT.VIP_PURCHASE,
+        ).order_by('balance_type')
+        self.assertEqual(rows.count(), 2)
+        self.assertEqual(rows.get(balance_type=WalletTransaction.BalanceType.DEPOSIT).amount, Decimal('4.00000000'))
+        self.assertEqual(rows.get(balance_type=WalletTransaction.BalanceType.WITHDRAWABLE).amount, Decimal('6.00000000'))
+
+    def test_purchase_rejected_when_combined_is_short(self) -> None:
+        Wallet.objects.filter(user=self.user).update(withdrawable_balance=Decimal('5'), total_balance=Decimal('5'))
+        with self.assertRaises(VIPError):
+            self.buy(self.plan1, 'dep-buy-3')
+        self.assertFalse(VIPPurchase.objects.filter(user=self.user, idempotency_key='dep-buy-3').exists())
+
+    def test_summary_uses_combined_balance(self) -> None:
+        credit(
+            user=self.user, amount='50', balance_type=WalletTransaction.BalanceType.DEPOSIT,
+            transaction_type=TT.DEPOSIT, reference_type='deposit', idempotency_key='depbuy-seed-4',
+        )
+        summary = plan_purchase_summary(self.user, self.plan1)
+        self.assertEqual(summary['available_balance'], Decimal('150.00000000'))
+        self.assertTrue(summary['sufficient'])
 
 
 class VIPConcurrencyBase(TransactionTestCase):

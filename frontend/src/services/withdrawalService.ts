@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from './api';
+import { apiGet, apiPost, apiPostForm } from './api';
 import type {
   ApiEnvelope,
   PaginatedEnvelope,
@@ -58,14 +58,31 @@ export const withdrawalService = {
   /**
    * Submit a withdrawal. `idempotencyKey` makes retries safe: the same key
    * can never create two withdrawals or lock funds twice (§35).
+   * `qrImage` is an optional QR destination image — the typed address
+   * remains the authoritative destination.
    */
   async create(payload: {
     network: string;
     destination_address: string;
     amount: string;
     idempotency_key: string;
+    qr_image?: File | null;
   }): Promise<ApiEnvelope<WithdrawalDetail>> {
-    return apiPost<ApiEnvelope<WithdrawalDetail>>('/withdrawals/', payload);
+    if (payload.qr_image) {
+      const form = new FormData();
+      form.append('network', payload.network);
+      form.append('destination_address', payload.destination_address);
+      form.append('amount', payload.amount);
+      form.append('idempotency_key', payload.idempotency_key);
+      form.append('qr_image', payload.qr_image);
+      return apiPostForm<ApiEnvelope<WithdrawalDetail>>('/withdrawals/', form);
+    }
+    return apiPost<ApiEnvelope<WithdrawalDetail>>('/withdrawals/', {
+      network: payload.network,
+      destination_address: payload.destination_address,
+      amount: payload.amount,
+      idempotency_key: payload.idempotency_key,
+    });
   },
 
   /** Paginated history, newest first; destination masked (§38, §40). */

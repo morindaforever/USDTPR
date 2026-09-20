@@ -53,6 +53,7 @@ export interface AdminDepositRow {
   user_id: string;
   user_email?: string;
   network: string;
+  network_name?: string;
   amount: string;
   tx_hash?: string;
   order_id?: string;
@@ -62,6 +63,26 @@ export interface AdminDepositRow {
   reviewer_email?: string | null;
   admin_note?: string;
   deposit_address?: string;
+  has_screenshot?: boolean;
+  /** MANUAL_VERIFICATION (default) or ON_CHAIN_VERIFIED (real provider ran). */
+  verification_status?: 'MANUAL_VERIFICATION' | 'ON_CHAIN_VERIFIED';
+}
+
+/** Network configuration row (GET/PATCH /api/admin-panel/networks/). */
+export interface AdminNetworkRow {
+  id: number;
+  code: string;
+  name: string;
+  asset: string;
+  is_active: boolean;
+  current_address: string | null;
+  contract_address: string;
+  min_deposit: string | null;
+  min_withdrawal: string | null;
+  withdrawal_fee: string | null;
+  withdrawal_fee_is_percent: boolean | null;
+  network_warning: string;
+  instructions: string;
 }
 
 export interface AdminWithdrawalRow {
@@ -77,6 +98,7 @@ export interface AdminWithdrawalRow {
   created_at: string;
   tx_hash: string;
   rejection_reason: string;
+  has_qr_image?: boolean;
 }
 
 export interface AdminVipPlan {

@@ -68,6 +68,15 @@ DEBITABLE_BALANCE_TYPES = {
     WalletTransaction.BalanceType.LOCKED,
 }
 
+# Buckets ``debit_across`` may spend: the free-to-spend buckets. LOCKED is
+# excluded on purpose — it is reserved for in-flight withdrawals, and letting
+# purchases drain it would double-spend reserved funds. PENDING likewise.
+SPENDABLE_BALANCE_TYPES = {
+    WalletTransaction.BalanceType.DEPOSIT,
+    WalletTransaction.BalanceType.WITHDRAWABLE,
+    WalletTransaction.BalanceType.BONUS,
+}
+
 QUANT = Decimal('0.00000001')
 
 
@@ -298,6 +307,88 @@ def debit(
     _recompute_total(wallet)
     wallet.save()
     return ledger
+
+
+@transaction.atomic
+def debit_across(
+    *,
+    user,
+    amount,
+    balance_types,
+    transaction_type,
+    reference_type: str = '',
+    reference_id: str = '',
+    description: str = '',
+    idempotency_key: str | None = None,
+) -> list[WalletTransaction]:
+    """Debit one amount across several buckets, in order, atomically.
+
+    Each bucket is drained up to ``amount`` before moving to the next, so a
+    purchase can spend e.g. deposit balance first and fall back to the
+    withdrawable bucket. One DEBIT ledger row is written per bucket touched
+    (the first leg carries the caller's idempotency key verbatim, later legs
+    get ``:b2``/``:b3`` suffixes, mirroring the lock/release convention).
+
+    All-or-nothing: the combined balance is checked under the wallet row
+    lock BEFORE any ledger row is written — if the buckets together cannot
+    cover the amount, InsufficientBalanceError is raised with no money
+    moved. Concurrency-safe for the same reason as ``debit``: competitors
+    serialize on the row lock and re-check against post-debit balances.
+    """
+    amount = normalize_amount(amount)
+    types = [_balance_type(value) for value in balance_types]
+    if not types:
+        raise InvalidBalanceTypeError('At least one balance type is required.')
+    if len(set(types)) != len(types):
+        raise InvalidBalanceTypeError('Balance types must not repeat.')
+    for balance_type in types:
+        if balance_type not in SPENDABLE_BALANCE_TYPES:
+            raise InvalidBalanceTypeError(f'{balance_type.label} is not a spendable bucket.')
+
+    existing = _find_idempotent(user, idempotency_key)
+    if existing is not None:
+        return [existing]
+
+    wallet = _lock_wallet(user)
+    # Combined affordability check under the lock, before any ledger write.
+    combined = sum((getattr(wallet, f'{t.value.lower()}_balance') for t in types), Decimal('0'))
+    if combined < amount:
+        raise InsufficientBalanceError(
+            f'Insufficient combined balance: has {combined.quantize(QUANT)}, needs {amount}.'
+        )
+
+    # Split the amount across buckets: drain each until the remainder is 0.
+    remainder = amount
+    legs: list[tuple[WalletTransaction.BalanceType, Decimal]] = []
+    for balance_type in types:
+        if remainder <= 0:
+            break
+        available = getattr(wallet, f'{balance_type.value.lower()}_balance')
+        take = available if available < remainder else remainder
+        if take > 0:
+            legs.append((balance_type, take.quantize(QUANT)))
+            remainder = (remainder - take).quantize(QUANT)
+
+    ledgers: list[WalletTransaction] = []
+    for index, (balance_type, take) in enumerate(legs):
+        leg_key = idempotency_key if index == 0 else (
+            f'{idempotency_key}:b{index + 1}' if idempotency_key else None
+        )
+        ledgers.append(_make_ledger(
+            user=user,
+            txn_type=transaction_type,
+            direction=WalletTransaction.Direction.DEBIT,
+            balance_type=balance_type,
+            amount=take,
+            description=description,
+            reference_type=reference_type,
+            reference_id=reference_id,
+            idempotency_key=leg_key,
+        ))
+        _apply(wallet, balance_type, WalletTransaction.Direction.DEBIT, take)
+    _recompute_total(wallet)
+    wallet.save()
+    return ledgers
 
 
 @transaction.atomic
@@ -688,6 +779,7 @@ __all__ = [
     'admin_adjust',
     'credit',
     'debit',
+    'debit_across',
     'ensure_wallet',
     'finalize_locked',
     'get_wallet',

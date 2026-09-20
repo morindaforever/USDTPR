@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,10 +10,12 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from apps.core.exceptions import api_exception_handler
+from apps.core.uploads import validate_user_image
 from apps.deposits.services import (
     DepositError,
     get_active_address,
     get_minimum_deposit,
+    get_network_minimum,
     list_active_networks,
     qr_code_data_uri,
     submit_deposit,
@@ -34,16 +36,28 @@ def _exception_context(view) -> dict:
 
 
 class NetworkListView(APIView):
-    """GET /api/deposits/networks/ — active networks for the deposit page."""
+    """GET /api/deposits/networks/ — active networks with per-network config."""
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         networks = list_active_networks()
-        data = NetworkSerializer(
-            [{'code': n.code, 'name': n.name, 'asset': n.asset} for n in networks], many=True,
-        ).data
-        return Response({'success': True, 'message': 'OK', 'data': data})
+        data = []
+        for n in networks:
+            address = get_active_address(n)
+            data.append(
+                {
+                    'code': n.code,
+                    'name': n.name,
+                    'asset': n.asset,
+                    'contract_address': n.contract_address,
+                    'minimum_amount': str(get_network_minimum(n).quantize(Decimal('0.01'))),
+                    'network_warning': n.network_warning,
+                    'instructions': n.instructions,
+                    'has_address': address is not None,
+                }
+            )
+        return Response({'success': True, 'message': 'OK', 'data': NetworkSerializer(data, many=True).data})
 
     def handle_exception(self, exc):
         return api_exception_handler(exc, _exception_context(self))
@@ -124,7 +138,9 @@ class DepositCollectionView(APIView):
     """/api/deposits/ collection endpoint.
 
     GET  — the authenticated user's deposit history.
-    POST — submit a new PENDING deposit (no wallet effect).
+    POST — submit a new PENDING deposit (no wallet effect). Accepts
+           ``multipart/form-data`` when a payment screenshot is attached;
+           plain JSON otherwise.
     """
 
     permission_classes = [IsAuthenticated]
@@ -139,6 +155,15 @@ class DepositCollectionView(APIView):
         serializer = SubmitDepositSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+        screenshot = data.get('screenshot')
+        if screenshot is not None:
+            try:
+                validate_user_image(screenshot)
+            except serializers.ValidationError as exc:
+                return Response(
+                    {'success': False, 'message': 'Please correct the highlighted fields.', 'errors': exc.detail},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         try:
             result = submit_deposit(
                 user=request.user,
@@ -146,6 +171,7 @@ class DepositCollectionView(APIView):
                 amount=data['amount'],
                 tx_hash=data.get('tx_hash', ''),
                 order_id=data.get('order_id', ''),
+                screenshot=screenshot,
             )
         except DepositError as exc:
             return Response(

@@ -18,6 +18,7 @@ from apps.wallet.services import (
     admin_adjust,
     credit,
     debit,
+    debit_across,
     ensure_wallet,
     finalize_locked,
     get_wallet_summary,
@@ -264,6 +265,100 @@ class AdjustAndReverseTests(WalletServiceTestBase):
         )
         with self.assertRaises(InvalidTransactionError):
             reverse_transaction(ledger=pending, reason='nope')
+
+
+class DebitAcrossTests(WalletServiceTestBase):
+    """Multi-bucket debit (VIP purchases spend deposit → withdrawable)."""
+
+    def test_drains_first_bucket_then_falls_back(self) -> None:
+        credit(user=self.user, amount='30', balance_type=BT.DEPOSIT,
+               transaction_type=TT.DEPOSIT, idempotency_key='da-seed-d')
+        credit(user=self.user, amount='50', balance_type=BT.WITHDRAWABLE,
+               transaction_type=TT.ADJUSTMENT, idempotency_key='da-seed-w')
+        legs = debit_across(
+            user=self.user, amount='40', balance_types=[BT.DEPOSIT, BT.WITHDRAWABLE],
+            transaction_type=TT.VIP_PURCHASE, idempotency_key='da-1',
+        )
+        self.assertEqual(len(legs), 2)
+        self.assertEqual(self.balance('deposit_balance'), Decimal('0'))
+        self.assertEqual(self.balance('withdrawable_balance'), Decimal('40'))
+        rows = WalletTransaction.objects.filter(
+            user=self.user, transaction_type=TT.VIP_PURCHASE,
+        ).order_by('balance_type')
+        self.assertEqual(rows.count(), 2)
+        self.assertEqual(rows.get(balance_type=BT.DEPOSIT).amount, Decimal('30.00000000'))
+        self.assertEqual(rows.get(balance_type=BT.WITHDRAWABLE).amount, Decimal('10.00000000'))
+        self.assertEqual(rows.get(balance_type=BT.DEPOSIT).idempotency_key, 'da-1')
+        self.assertEqual(rows.get(balance_type=BT.WITHDRAWABLE).idempotency_key, 'da-1:b2')
+        self.assertEqual(self.balance('total_balance'), Decimal('40'))
+
+    def test_single_bucket_touch(self) -> None:
+        credit(user=self.user, amount='30', balance_type=BT.DEPOSIT,
+               transaction_type=TT.DEPOSIT, idempotency_key='da-seed-d2')
+        legs = debit_across(
+            user=self.user, amount='25', balance_types=[BT.DEPOSIT, BT.WITHDRAWABLE],
+            transaction_type=TT.VIP_PURCHASE, idempotency_key='da-2',
+        )
+        self.assertEqual(len(legs), 1)
+        self.assertEqual(legs[0].balance_type, BT.DEPOSIT)
+        self.assertEqual(self.balance('withdrawable_balance'), Decimal('0'))
+
+    def test_combined_shortfall_raises_with_no_movement(self) -> None:
+        credit(user=self.user, amount='30', balance_type=BT.DEPOSIT,
+               transaction_type=TT.DEPOSIT, idempotency_key='da-seed-d3')
+        with self.assertRaises(InsufficientBalanceError):
+            debit_across(
+                user=self.user, amount='31', balance_types=[BT.DEPOSIT, BT.WITHDRAWABLE],
+                transaction_type=TT.VIP_PURCHASE, idempotency_key='da-3',
+            )
+        self.assertEqual(self.balance('deposit_balance'), Decimal('30'))
+        self.assertFalse(
+            WalletTransaction.objects.filter(user=self.user, transaction_type=TT.VIP_PURCHASE).exists()
+        )
+
+    def test_replay_returns_first_leg(self) -> None:
+        credit(user=self.user, amount='30', balance_type=BT.DEPOSIT,
+               transaction_type=TT.DEPOSIT, idempotency_key='da-seed-d5')
+        credit(user=self.user, amount='50', balance_type=BT.WITHDRAWABLE,
+               transaction_type=TT.ADJUSTMENT, idempotency_key='da-seed-w5')
+        first = debit_across(
+            user=self.user, amount='40', balance_types=[BT.DEPOSIT, BT.WITHDRAWABLE],
+            transaction_type=TT.VIP_PURCHASE, idempotency_key='da-5',
+        )
+        credit(user=self.user, amount='50', balance_type=BT.WITHDRAWABLE,
+               transaction_type=TT.ADJUSTMENT, idempotency_key='da-seed-w5b')
+        replay = debit_across(
+            user=self.user, amount='40', balance_types=[BT.DEPOSIT, BT.WITHDRAWABLE],
+            transaction_type=TT.VIP_PURCHASE, idempotency_key='da-5',
+        )
+        self.assertEqual([leg.pk for leg in replay], [first[0].pk])
+        # Replay moved no money: withdrawable = 40 (after first debit) + 50.
+        self.assertEqual(self.balance('withdrawable_balance'), Decimal('90'))
+
+    def test_empty_and_repeated_types_rejected(self) -> None:
+        with self.assertRaises(InvalidBalanceTypeError):
+            debit_across(
+                user=self.user, amount='1', balance_types=[],
+                transaction_type=TT.VIP_PURCHASE, idempotency_key='da-6',
+            )
+        with self.assertRaises(InvalidBalanceTypeError):
+            debit_across(
+                user=self.user, amount='1', balance_types=[BT.DEPOSIT, BT.DEPOSIT],
+                transaction_type=TT.VIP_PURCHASE, idempotency_key='da-7',
+            )
+
+    def test_locked_bucket_excluded_from_purchases(self) -> None:
+        """LOCKED/PENDING are reserved buckets — never spendable."""
+        with self.assertRaises(InvalidBalanceTypeError):
+            debit_across(
+                user=self.user, amount='1', balance_types=[BT.LOCKED],
+                transaction_type=TT.VIP_PURCHASE, idempotency_key='da-8',
+            )
+        with self.assertRaises(InvalidBalanceTypeError):
+            debit_across(
+                user=self.user, amount='1', balance_types=[BT.PENDING],
+                transaction_type=TT.VIP_PURCHASE, idempotency_key='da-9',
+            )
 
 
 class ReconcileTests(WalletServiceTestBase):

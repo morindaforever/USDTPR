@@ -73,6 +73,7 @@ class WithdrawalAdminSerializer(serializers.ModelSerializer):
     amount = serializers.DecimalField(
         source='requested_amount', max_digits=24, decimal_places=8, read_only=True,
     )
+    has_qr_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Withdrawal
@@ -87,6 +88,7 @@ class WithdrawalAdminSerializer(serializers.ModelSerializer):
             'net_amount',
             'status',
             'tx_hash',
+            'has_qr_image',
             'rejection_reason',
             'admin_note',
             'created_at',
@@ -98,14 +100,31 @@ class WithdrawalAdminSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
+    def get_has_qr_image(self, withdrawal: Withdrawal) -> bool:
+        return bool(withdrawal.qr_image)
+
 
 class WithdrawalCreateSerializer(serializers.Serializer):
-    """POST /api/withdrawals/ body (§18). Everything else is server-side."""
+    """POST /api/withdrawals/ body (§18). Everything else is server-side.
+
+    Accepts JSON or ``multipart/form-data`` with an optional QR image."""
 
     network = serializers.CharField(max_length=10)
     destination_address = serializers.CharField(max_length=255)
     amount = serializers.DecimalField(max_digits=24, decimal_places=8)
     idempotency_key = serializers.CharField(max_length=128)
+    qr_image = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        help_text='Optional QR destination image (context for reviewers; the typed address is authoritative).',
+    )
+
+    def validate(self, attrs):
+        # An empty multipart file field (browser sends '') means "no QR".
+        qr = attrs.get('qr_image')
+        if qr is not None and hasattr(qr, 'name') and not qr.name:
+            attrs['qr_image'] = None
+        return attrs
 
 
 class WithdrawalQuoteSerializer(serializers.Serializer):

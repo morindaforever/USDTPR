@@ -66,12 +66,14 @@ export function DepositPage() {
   const [addressError, setAddressError] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [reference, setReference] = useState('');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [submitted, setSubmitted] = useState<Deposit | null>(null);
   const [minimum, setMinimum] = useState<string | null>(null);
 
   const history = useDashboardData<Deposit[]>(() => depositService.list());
+  const selectedNetwork = networks.find((n) => n.code === selected) ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -133,10 +135,12 @@ export function DepositPage() {
         amount,
         tx_hash: reference,
         order_id: '',
+        screenshot,
       });
       setSubmitted(deposit);
       setAmount('');
       setReference('');
+      setScreenshot(null);
       history.retry();
     } catch (err) {
       const fieldErrors = (err as { fieldErrors?: Record<string, string[]> }).fieldErrors;
@@ -151,6 +155,16 @@ export function DepositPage() {
       setSubmitting(false);
     }
   };
+
+  const onScreenshotChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setScreenshot(file);
+    // Allow re-selecting the same file after a reset.
+    event.target.value = '';
+  };
+
+  // Per-network minimum (backend-resolved) falls back to the global rules value.
+  const effectiveMinimum = selectedNetwork?.minimum_amount ?? minimum;
 
   const rows = history.data ?? [];
 
@@ -193,13 +207,23 @@ export function DepositPage() {
               </div>
             )}
 
+            {selectedNetwork?.contract_address && (
+              <p className="mt-3 break-all text-[11px] text-surface-500">
+                <span className="font-medium text-surface-600">USDT contract:</span>{' '}
+                <code className="rounded bg-surface-100 px-1.5 py-0.5">{selectedNetwork.contract_address}</code>
+              </p>
+            )}
+
             <div className="mt-4 rounded-xl bg-amber-50 p-3 ring-1 ring-inset ring-amber-200">
               <p className="flex items-start gap-2 text-xs leading-relaxed text-amber-900">
                 <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
-                Send USDT only using the selected network. Using an unsupported
-                network may result in loss of funds.
+                {selectedNetwork?.network_warning ||
+                  'Send USDT only on the selected network. Sending assets through another network may result in permanent loss.'}
               </p>
             </div>
+            {selectedNetwork?.instructions && (
+              <p className="mt-2 text-xs leading-relaxed text-surface-500">{selectedNetwork.instructions}</p>
+            )}
           </div>
         </Card>
 
@@ -250,9 +274,9 @@ export function DepositPage() {
               <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white">3</span>
               Submit deposit for review
             </h2>
-            {minimum && (
+            {effectiveMinimum && (
               <p className="mt-1 text-xs text-surface-500">
-                Minimum deposit: {formatUsdt(minimum)} USDT (validated by the backend).
+                Minimum deposit: {formatUsdt(effectiveMinimum)} USDT (validated by the backend).
               </p>
             )}
             <form onSubmit={(event) => void submit(event)} className="mt-4 space-y-4" noValidate>
@@ -277,11 +301,34 @@ export function DepositPage() {
                 error={fieldErrors.tx_hash?.[0]}
                 required
               />
+              <div>
+                <label
+                  htmlFor="deposit-screenshot"
+                  className="mb-1.5 block text-sm font-medium text-surface-700"
+                >
+                  Payment screenshot <span className="font-normal text-surface-400">(optional)</span>
+                </label>
+                <input
+                  id="deposit-screenshot"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={onScreenshotChange}
+                  className="block w-full cursor-pointer rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+                />
+                {screenshot && (
+                  <p className="mt-1.5 text-xs text-surface-500">
+                    Attached: {screenshot.name} ({Math.max(1, Math.round(screenshot.size / 1024))} KB)
+                  </p>
+                )}
+                {fieldErrors.screenshot?.[0] && (
+                  <p className="mt-1.5 text-xs text-red-600">{fieldErrors.screenshot[0]}</p>
+                )}
+              </div>
               <Button
                 type="submit"
                 fullWidth
                 isLoading={submitting}
-                disabled={submitting || !selected}
+                disabled={submitting || !selected || selectedNetwork?.has_address === false}
               >
                 Submit deposit request
               </Button>

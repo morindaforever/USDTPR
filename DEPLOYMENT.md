@@ -36,6 +36,9 @@ Every secret comes from the environment — never commit `.env`.
 | `CORS_ALLOWED_ORIGINS` | `https://app.example.com` (exact origin list) |
 | `CSRF_TRUSTED_ORIGINS` | `https://app.example.com` |
 | `PUBLIC_APP_URL` | `https://app.example.com` (referral links) |
+| `MAX_UPLOAD_BYTES` | optional; default 5242880 (5 MB) image cap |
+| `CHAIN_VERIFICATION_ENABLED` | keep `False` until a real chain provider is wired in |
+| `PAYOUTS_ENABLED` | keep `False` until a real payout provider is wired in |
 | `SECURE_SSL_REDIRECT` | `True` once HTTPS is live |
 
 Frontend build-time variables (`frontend/.env.production`, public only):
@@ -52,10 +55,33 @@ Never place secrets in `VITE_*` variables — they ship to every browser.
 createdb -h db-host -U app_user usdt_prod
 cd backend
 python manage.py migrate --noinput          # apply schema
+python manage.py bootstrap_deposit_networks # create Network rows (NO addresses)
 python manage.py bootstrap_admin_groups     # admin permission groups
 python manage.py seed_platform_settings     # editable settings rows (defaults)
 python manage.py createsuperuser            # first admin account
 ```
+
+### Post-migrate: configure deposit networks (operator, REQUIRED)
+
+`bootstrap_deposit_networks` creates the six USDT network rows (BSC, TRX,
+ETH, POL, SOL, TON) with **empty configuration** — it never invents deposit
+addresses. Before users can deposit on a network, the operator must set,
+per network, via the admin panel (`/admin` → Networks / Deposit addresses):
+
+1. **Deposit address** — your real receiving address for that network
+   (POST `/api/admin-panel/deposit-addresses/` with `{network, address}`).
+2. **Contract address** (optional display) — e.g. the USDT contract on that
+   chain.
+3. **Per-network minimum deposit / minimum withdrawal / withdrawal fee** —
+   optional; leave empty to inherit the global `deposit.min_amount` and
+   `withdrawal.*` settings.
+4. **Warning / instructions** — user-facing copy shown on the deposit and
+   withdrawal pages (a strong default warning renders when empty).
+5. **Enabled** — activate the network only after its address is configured.
+
+Uploaded files (deposit screenshots, withdrawal QR images) are stored under
+`MEDIA_ROOT` in **private media** and served only through authenticated
+staff/owner views — never expose `media/` on a public static path.
 
 Notes:
 
@@ -213,17 +239,30 @@ Run through these in order (read-only checks first):
 
 1. `GET https://api.example.com/api/health/` → ok
 2. Signup → login → dashboard loads with wallet summary
-3. Deposit submit → appears as PENDING (admin review path)
-4. Admin: approve a deposit → ledger row + wallet credit + notification
-5. VIP purchase from withdrawable balance → snapshot correct
-6. Reward cycle (or `process_vip_rewards` manually) → one credit per cycle
-7. Withdrawal: submit → lock → approve → processing → complete (no tx hash
-   fabrication; locked/withdrawable buckets correct)
-8. Referral commission fires on the referrer's side once, not twice
-9. Support reply → user notification arrives
-10. Notifications: unread count, mark-read, mark-all
-11. Transaction history filters/search paginate correctly
-12. `/admin/*` rejects non-staff users (401/403)
+3. Deposit: network selector shows configured networks with per-network
+   minimums; address + server-rendered QR match; submit → PENDING
+4. Duplicate transaction hash (same or different user) is rejected
+5. Admin: deposit appears with screenshot (if uploaded) and
+   "Manual verification" label → approve → ledger row + wallet credit
+   exactly once → second approve is a no-op
+6. Admin: reject → reason stored + user notified; the hash may be reused
+   after rejection
+7. VIP purchase from withdrawable balance → snapshot correct
+8. Reward cycle (or `process_vip_rewards` manually) → one credit per cycle
+9. Withdrawal: submit → funds LOCKED immediately (withdrawable ↓, locked ↑);
+   insufficient balance rejected atomically; invalid network/address format
+   rejected server-side
+10. Admin withdrawal queue: approve → "Payment pending" state visible →
+    processing → complete with the REAL payout transaction hash (never
+    invented; an empty hash is allowed only when settlement is internal) →
+    status COMPLETED, locked balance finalized exactly once
+11. Admin rejects a withdrawal → reserved balance released, reason stored,
+    user notified
+12. Referral commission fires on the referrer's side once, not twice
+13. Support reply → user notification arrives
+14. Notifications: unread count, mark-read, mark-all
+15. Transaction history filters/search paginate correctly
+16. `/admin/*` rejects non-staff users (401/403)
 
 Destructive/security tests belong in **staging**, never against production
 data.

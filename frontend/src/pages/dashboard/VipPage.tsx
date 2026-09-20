@@ -15,10 +15,10 @@ import {
 import type { PlanPurchaseSummary, PurchaseResponse, VipPlan, VipPurchase, VipReward } from '@/types';
 
 /**
- * VIP plans page (Sections 7–8): browse plans, purchase with
- * withdrawable balance, view active plans with backend-computed reward
- * progress, reward history, and purchase history. Nothing here credits
- * rewards — that is the backend engine's job.
+ * VIP plans page (Sections 7–8): browse plans, purchase using the combined
+ * deposit + withdrawable balance, view active plans with backend-computed
+ * reward progress, reward history, and purchase history. Nothing here
+ * credits rewards — that is the backend engine's job.
  */
 export function VipPage() {
   const navigate = useNavigate();
@@ -157,7 +157,7 @@ export function VipPage() {
               </div>
             </dl>
             <p className="mt-3 text-xs text-surface-500">
-              Remaining withdrawable balance: {formatUsdt(success.remaining_balance)} USDT
+              Remaining spendable balance (deposit + withdrawable): {formatUsdt(success.remaining_balance)} USDT
             </p>
             <div className="mt-4 flex gap-3">
               <button

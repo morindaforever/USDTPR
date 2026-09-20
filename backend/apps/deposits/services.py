@@ -101,6 +101,13 @@ class SubmissionResult:
     deposit: Deposit
 
 
+def get_network_minimum(network: Network) -> Decimal:
+    """Effective minimum deposit for ``network`` (per-network override else global)."""
+    if network.min_deposit is not None:
+        return network.min_deposit
+    return get_minimum_deposit()
+
+
 def _validate_submission(*, user, network_code: str, amount, tx_hash: str, order_id: str) -> dict:
     """Validate a submission; raises DepositError with field errors."""
     errors: dict[str, list[str]] = {}
@@ -119,10 +126,14 @@ def _validate_submission(*, user, network_code: str, amount, tx_hash: str, order
         errors.setdefault('amount', []).append(str(exc))
         amount_decimal = None
 
-    if amount_decimal is not None and amount_decimal < get_minimum_deposit():
-        errors.setdefault('amount', []).append(
-            f'Minimum deposit is {get_minimum_deposit()} USDT.'
-        )
+    minimum = None
+    if amount_decimal is not None:
+        network_for_min = Network.objects.filter(code=(network_code or '').strip().upper()).first()
+        minimum = get_network_minimum(network_for_min) if network_for_min else get_minimum_deposit()
+        if amount_decimal < minimum:
+            errors.setdefault('amount', []).append(
+                f'Minimum deposit is {minimum.quantize(Decimal("0.01"))} USDT.'
+            )
 
     tx_hash = (tx_hash or '').strip()
     order_id = (order_id or '').strip()
@@ -134,14 +145,33 @@ def _validate_submission(*, user, network_code: str, amount, tx_hash: str, order
     if errors:
         raise DepositError('Please correct the highlighted fields.', errors)
 
-    # Duplicate protection: same user + network + tx_hash already active.
-    if tx_hash and Deposit.objects.filter(
-        user=user, network=network, tx_hash__iexact=tx_hash,
+    # Duplicate protection — per-user (friendly error) and GLOBAL: the same
+    # tx hash may never sit in two active deposits, whichever user submitted
+    # it. The DB constraint (deposit_unique_active_tx_hash) is the backstop.
+    if tx_hash:
+        if Deposit.objects.filter(
+            user=user, network=network, tx_hash__iexact=tx_hash,
+            status__in=[Deposit.Status.PENDING, Deposit.Status.APPROVED],
+        ).exists():
+            raise DepositError(
+                'This transaction has already been submitted.',
+                {'tx_hash': ['This transaction hash was already used in a pending or approved deposit.']},
+            )
+        if Deposit.objects.exclude(user=user).filter(
+            tx_hash__iexact=tx_hash,
+            status__in=[Deposit.Status.PENDING, Deposit.Status.APPROVED],
+        ).exists():
+            raise DepositError(
+                'This transaction has already been submitted.',
+                {'tx_hash': ['This transaction hash is already recorded on another deposit.']},
+            )
+    elif order_id and Deposit.objects.filter(
+        user=user, order_id__iexact=order_id,
         status__in=[Deposit.Status.PENDING, Deposit.Status.APPROVED],
     ).exists():
         raise DepositError(
-            'This transaction has already been submitted.',
-            {'tx_hash': ['This transaction hash was already used in a pending or approved deposit.']},
+            'This order reference has already been submitted.',
+            {'order_id': ['This order reference was already used in a pending or approved deposit.']},
         )
 
     address = get_active_address(network)
@@ -161,8 +191,13 @@ def _validate_submission(*, user, network_code: str, amount, tx_hash: str, order
 
 
 @transaction.atomic
-def submit_deposit(*, user, network_code: str, amount, tx_hash: str, order_id: str) -> SubmissionResult:
-    """Create a PENDING deposit. No wallet changes here, ever."""
+def submit_deposit(
+    *, user, network_code: str, amount, tx_hash: str, order_id: str,
+    screenshot=None,
+) -> SubmissionResult:
+    """Create a PENDING deposit. No wallet changes here, ever.
+
+    ``screenshot`` is an optional validated upload (payment proof)."""
     # Server-side account-status gate (Section 14 §9): suspended/banned
     # accounts cannot submit deposits, regardless of what the UI shows.
     try:
@@ -180,6 +215,7 @@ def submit_deposit(*, user, network_code: str, amount, tx_hash: str, order_id: s
         tx_hash=data['tx_hash'],
         order_id=data['order_id'],
         deposit_address=data['address'].address,  # snapshot at submission time
+        screenshot=screenshot,
         status=Deposit.Status.PENDING,
         submitted_at=timezone.now(),
     )
@@ -226,6 +262,7 @@ def approve_deposit(*, deposit: Deposit, admin_user, note: str = '') -> Deposit:
 
     locked.status = Deposit.Status.APPROVED
     locked.approved_at = timezone.now()
+    locked.reviewed_by = admin_user
     if note.strip():
         locked.admin_note = note.strip()[:2000]
     locked.save()
@@ -260,13 +297,12 @@ def reject_deposit(*, deposit: Deposit, admin_user, reason: str) -> Deposit:
         return locked
     if locked.status != Deposit.Status.PENDING:
         raise DepositError(f'Deposit {locked.deposit_id} is {locked.status.lower()} and cannot be rejected.')
-
-    reason = (reason or '').strip()
     if not reason:
         raise DepositError('A rejection reason is required.', {'reason': ['A reason is required.']})
 
     locked.status = Deposit.Status.REJECTED
     locked.rejected_at = timezone.now()
+    locked.reviewed_by = admin_user
     locked.admin_note = reason[:2000]
     locked.save()
 

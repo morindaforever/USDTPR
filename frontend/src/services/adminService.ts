@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPost } from './api';
+import { apiGet, apiGetBlob, apiPatch, apiPost } from './api';
 import type {
   ApiEnvelope,
   PaginatedEnvelope,
@@ -8,6 +8,7 @@ import type {
   AdminCommissionRow,
   AdminDashboard,
   AdminDepositRow,
+  AdminNetworkRow,
   AdminNotification,
   AdminReferralRow,
   AdminReward,
@@ -73,6 +74,12 @@ export const adminService = {
   depositAction(depositId: string, action: 'approve' | 'reject', reason = ''): Promise<ApiEnvelope<{ deposit: AdminDepositRow }>> {
     return apiPost(`/admin/deposits/${depositId}/${action}/`, { reason });
   },
+  depositNote(depositId: string, adminNote: string): Promise<ApiEnvelope<{ deposit: AdminDepositRow }>> {
+    return apiPatch(`/admin/deposits/${depositId}/note/`, { admin_note: adminNote });
+  },
+  depositScreenshot(depositId: string): Promise<Blob> {
+    return apiGetBlob(`/admin/deposits/${depositId}/screenshot/`);
+  },
 
   // Withdrawals ---------------------------------------------------------------
   withdrawals(params: ListParams): Promise<PaginatedEnvelope<AdminWithdrawalRow>> {
@@ -80,6 +87,12 @@ export const adminService = {
   },
   withdrawal(withdrawalId: string): Promise<ApiEnvelope<{ withdrawal: AdminWithdrawalRow }>> {
     return apiGet(`/admin/withdrawals/${withdrawalId}/`);
+  },
+  withdrawalQR(withdrawalId: string): Promise<Blob> {
+    return apiGetBlob(`/admin/withdrawals/${withdrawalId}/qr/`);
+  },
+  networks(): Promise<ApiEnvelope<AdminNetworkRow[]>> {
+    return apiGet('/admin-panel/networks/');
   },
   withdrawalAction(
     withdrawalId: string,

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { adminService } from '@/services/adminService';
 import { useDashboardData } from '@/hooks';
 import { AdminFilterChips, AdminPageHeader, AdminStatusBadge, AdminTable } from '@/components/admin';
@@ -24,6 +24,52 @@ export function AdminDepositsPage() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<AdminDepositRow | null>(null);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [screenshotError, setScreenshotError] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [noteBusy, setNoteBusy] = useState(false);
+  const [noteSaved, setNoteSaved] = useState(false);
+
+  // Load the payment screenshot when the details modal opens.
+  useEffect(() => {
+    if (!expanded?.has_screenshot) {
+      setScreenshotUrl(null);
+      setScreenshotError(null);
+      return;
+    }
+    let url: string | null = null;
+    setScreenshotError(null);
+    adminService
+      .depositScreenshot(expanded.deposit_id)
+      .then((blob) => {
+        url = URL.createObjectURL(blob);
+        setScreenshotUrl(url);
+      })
+      .catch(() => setScreenshotError('Unable to load the screenshot.'));
+    return () => {
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [expanded?.deposit_id, expanded?.has_screenshot]);
+
+  // Sync the note draft whenever a different deposit is opened.
+  useEffect(() => {
+    setNoteDraft(expanded?.admin_note ?? '');
+    setNoteSaved(false);
+  }, [expanded?.deposit_id]);
+
+  const saveNote = async () => {
+    if (!expanded || noteBusy) return;
+    setNoteBusy(true);
+    try {
+      const envelope = await adminService.depositNote(expanded.deposit_id, noteDraft.trim());
+      if (envelope.success) {
+        setNoteSaved(true);
+        query.retry();
+      }
+    } finally {
+      setNoteBusy(false);
+    }
+  };
 
   const fetcher = useCallback(
     async () => {
@@ -171,28 +217,76 @@ export function AdminDepositsPage() {
         )}
       </Modal>
 
-      {/* Detail modal (§19) */}
+      {/* Detail modal (§19): screenshot, reviewer, verification label, note. */}
       <Modal open={expanded !== null} onClose={() => setExpanded(null)} title="Deposit details">
         {expanded && (
-          <dl className="space-y-2 text-sm">
-            {[
-              ['Deposit ID', expanded.deposit_id],
-              ['User', expanded.user_id],
-              ['Network', expanded.network],
-              ['Amount', `${formatUsdt(expanded.amount)} USDT`],
-              ['Tx / order ID', expanded.tx_hash || expanded.order_id || '—'],
-              ['Status', expanded.status],
-              ['Submitted', formatDateTime(expanded.created_at)],
-              ['Reviewed', expanded.reviewed_at ? formatDateTime(expanded.reviewed_at) : '—'],
-              ['Reviewer', expanded.reviewer_email || '—'],
-              ['Admin note', expanded.admin_note || '—'],
-            ].map(([label, value]) => (
-              <div key={label} className="flex justify-between gap-4">
-                <dt className="text-surface-400">{label}</dt>
-                <dd className="max-w-[60%] break-words text-right text-surface-200">{value}</dd>
+          <div className="space-y-4">
+            <dl className="space-y-2 text-sm">
+              {[
+                ['Deposit ID', expanded.deposit_id],
+                ['User', `${expanded.user_id}${expanded.user_email ? ` · ${expanded.user_email}` : ''}`],
+                ['Network', expanded.network_name ? `${expanded.network_name} (${expanded.network})` : expanded.network],
+                ['Amount', `${formatUsdt(expanded.amount)} USDT`],
+                ['Deposit address', expanded.deposit_address || '—'],
+                ['Tx / order ID', expanded.tx_hash || expanded.order_id || '—'],
+                ['Status', expanded.status],
+                ['Submitted', formatDateTime(expanded.created_at)],
+                ['Reviewed', expanded.reviewed_at ? formatDateTime(expanded.reviewed_at) : '—'],
+                ['Reviewer', expanded.reviewer_email || '—'],
+                [
+                  'Verification',
+                  expanded.verification_status === 'ON_CHAIN_VERIFIED'
+                    ? 'On-chain verified'
+                    : 'Manual verification',
+                ],
+              ].map(([label, value]) => (
+                <div key={label} className="flex justify-between gap-4">
+                  <dt className="text-surface-400">{label}</dt>
+                  <dd className="max-w-[60%] break-words text-right text-surface-200">{value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            {expanded.has_screenshot && (
+              <div>
+                <p className="mb-1.5 text-xs font-medium text-surface-400">Payment screenshot</p>
+                {screenshotError ? (
+                  <p className="text-xs text-red-400">{screenshotError}</p>
+                ) : screenshotUrl ? (
+                  <img
+                    src={screenshotUrl}
+                    alt="User payment screenshot"
+                    className="max-h-72 rounded-xl border border-white/10"
+                  />
+                ) : (
+                  <div className="h-40 w-full animate-pulse rounded-xl bg-white/5" />
+                )}
               </div>
-            ))}
-          </dl>
+            )}
+
+            <div>
+              <label htmlFor="deposit-note" className="mb-1 block text-xs font-medium text-surface-400">
+                Admin note (saved without changing the deposit status)
+              </label>
+              <textarea
+                id="deposit-note"
+                value={noteDraft}
+                rows={3}
+                maxLength={2000}
+                onChange={(e) => {
+                  setNoteDraft(e.target.value);
+                  setNoteSaved(false);
+                }}
+                className="w-full resize-none rounded-xl border border-white/10 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
+              />
+              <div className="mt-2 flex items-center gap-2">
+                <Button size="sm" variant="secondary" isLoading={noteBusy} onClick={() => void saveNote()}>
+                  Save note
+                </Button>
+                {noteSaved && <span className="text-xs text-emerald-400">Saved.</span>}
+              </div>
+            </div>
+          </div>
         )}
       </Modal>
     </div>

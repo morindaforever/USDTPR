@@ -26,7 +26,12 @@ ACCOUNTING POLICY (authoritative — see docs/WALLET.md for the full version):
 from django.conf import settings
 from django.db import models
 
-from apps.core.db import HumanIDField, TimeStampedModel, money_field
+from apps.core.db import (
+    HumanIDField,
+    TimeStampedModel,
+    money_field,
+    optional_money_field,
+)
 
 
 class Wallet(TimeStampedModel):
@@ -149,7 +154,11 @@ class Network(TimeStampedModel):
     """Blockchain network configuration (BSC, TRX, ETH, POL, SOL, TON).
 
     Nothing about networks is hard-coded in views or templates; everything
-    reads from this table.
+    reads from this table. Per-network deposit/withdrawal parameters
+    (contract, minimums, fee, warnings) are admin-editable columns so the
+    operator can manage every network without a code change. Empty numeric
+    fields fall back to the platform-wide SiteSetting defaults — a value of
+    ``None`` means "use the global rule".
     """
 
     name = models.CharField(max_length=64)
@@ -158,10 +167,39 @@ class Network(TimeStampedModel):
     is_active = models.BooleanField(default=True, db_index=True)
     sort_order = models.PositiveIntegerField(default=0)
 
+    # --- Per-network production configuration (admin-editable) -----------
+    # USDT token/contract identifier on this network (TRC-20 contract,
+    # ERC-20/BEP-20/Polygon contract address, Solana mint, …). Display
+    # information only — verification still goes through
+    # settings.USDT_CONTRACTS when chain verification is enabled.
+    contract_address = models.CharField(max_length=255, blank=True)
+    # None = inherit the global minimum (deposit.min_amount setting).
+    min_deposit = optional_money_field(null=True)
+    # None = inherit the global minimum/fee (withdrawal.min_amount etc.).
+    min_withdrawal = optional_money_field(null=True)
+    withdrawal_fee = optional_money_field(null=True)
+    # True/False override; None = follow the global fee model.
+    withdrawal_fee_is_percent = models.BooleanField(null=True, blank=True)
+    # User-facing copy shown on the deposit/withdraw pages.
+    network_warning = models.CharField(max_length=500, blank=True)
+    instructions = models.TextField(blank=True)
+
     class Meta:
         ordering = ['sort_order', 'code']
         constraints = [
             models.UniqueConstraint(fields=['code', 'asset'], name='network_code_asset_unique'),
+            models.CheckConstraint(
+                check=models.Q(min_deposit__isnull=True) | models.Q(min_deposit__gt=0),
+                name='network_min_deposit_positive',
+            ),
+            models.CheckConstraint(
+                check=models.Q(min_withdrawal__isnull=True) | models.Q(min_withdrawal__gt=0),
+                name='network_min_withdrawal_positive',
+            ),
+            models.CheckConstraint(
+                check=models.Q(withdrawal_fee__isnull=True) | models.Q(withdrawal_fee__gte=0),
+                name='network_withdrawal_fee_nonnegative',
+            ),
         ]
 
     def __str__(self) -> str:

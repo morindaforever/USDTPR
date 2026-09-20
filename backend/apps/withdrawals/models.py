@@ -11,6 +11,19 @@ from django.db import models
 from apps.core.db import HumanIDField, TimeStampedModel, money_field
 
 
+def withdrawal_qr_path(instance, filename: str) -> str:
+    """Private-media path for user-uploaded QR destination images (§7).
+
+    The typed wallet_address stays the authoritative destination — the QR
+    image is supplementary context for the reviewing admin only.
+    """
+    import os
+    import uuid
+
+    ext = os.path.splitext(filename)[1].lower()[:8] or '.png'
+    return f'withdrawal_qr/{instance.user_id}/{uuid.uuid4().hex}{ext}'
+
+
 class Withdrawal(TimeStampedModel):
     """User withdrawal request (Section 10).
 
@@ -45,6 +58,9 @@ class Withdrawal(TimeStampedModel):
     fee_amount = money_field(default=0)
     net_amount = money_field(default=0)
     wallet_address = models.CharField(max_length=255)
+    # Optional QR destination image uploaded by the user (§7). NEVER parsed
+    # as truth: the typed wallet_address is the payout destination.
+    qr_image = models.FileField(upload_to=withdrawal_qr_path, blank=True, max_length=255)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING, db_index=True)
     tx_hash = models.CharField(max_length=128, blank=True)
     rejection_reason = models.CharField(max_length=255, blank=True, default='')

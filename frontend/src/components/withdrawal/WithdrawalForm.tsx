@@ -47,7 +47,8 @@ export function WithdrawalForm({
     }
   };
 
-  const submitDisabled = !network || address.trim().length === 0 || amount.trim().length === 0;
+  const submitDisabled =
+    !network || address.trim().length === 0 || amount.trim().length === 0 || !!amountError;
 
   return (
     <div className="space-y-5">

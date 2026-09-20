@@ -252,6 +252,16 @@ export interface DepositNetwork {
   code: string;
   name: string;
   asset: string;
+  /** USDT contract/token identifier on this network (may be empty). */
+  contract_address: string;
+  /** Per-network minimum (backend-resolved; falls back to the global rule). */
+  minimum_amount: string;
+  /** Admin-configured network warning (may be empty). */
+  network_warning: string;
+  /** Admin-configured instructions (may be empty). */
+  instructions: string;
+  /** False when the network is active but has no deposit address yet. */
+  has_address: boolean;
 }
 
 /** Deposit address + server-rendered QR from GET /api/deposits/address/. */
@@ -272,6 +282,8 @@ export interface Deposit {
   tx_hash: string;
   order_id: string;
   deposit_address: string;
+  /** True when a payment screenshot was attached (fetched separately). */
+  has_screenshot: boolean;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   admin_note: string;
   submitted_at: string;
@@ -286,6 +298,10 @@ export interface WithdrawalNetwork {
   asset: string;
   /** Format guidance only — the backend does format checks, not on-chain. */
   address_hint: string;
+  /** Admin-configured network warning (may be empty). */
+  network_warning: string;
+  /** Admin-configured instructions (may be empty). */
+  instructions: string;
 }
 
 /** Public withdrawal rules from GET /api/withdrawals/rules/ (§46). */

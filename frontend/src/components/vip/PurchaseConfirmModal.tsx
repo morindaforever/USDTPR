@@ -87,7 +87,7 @@ export function PurchaseConfirmModal({
             </div>
             <div className="my-2 border-t border-surface-200" />
             <div className="flex items-center justify-between">
-              <dt className="text-surface-500">Available balance</dt>
+              <dt className="text-surface-500">Available (deposit + withdrawable)</dt>
               <dd className="font-semibold tabular-nums text-surface-900">
                 {formatUsdt(summary.available_balance)} USDT
               </dd>
@@ -131,7 +131,7 @@ export function PurchaseConfirmModal({
         </div>
         {!isLoading && summary && !summary.sufficient && (
           <p className="mt-2 text-center text-xs text-surface-500">
-            Insufficient withdrawable balance for this plan.
+            Insufficient combined balance (deposit + withdrawable) for this plan.
           </p>
         )}
       </div>

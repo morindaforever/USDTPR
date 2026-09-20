@@ -14,6 +14,7 @@ app_name = 'admin-withdrawals'
 urlpatterns = [
     path('withdrawals/', views.AdminWithdrawalListView.as_view(), name='list'),
     path('withdrawals/<str:withdrawal_id>/', views.AdminWithdrawalDetailView.as_view(), name='detail'),
+    path('withdrawals/<str:withdrawal_id>/qr/', views.AdminWithdrawalQRView.as_view(), name='qr'),
     path('withdrawals/<str:withdrawal_id>/approve/', views.AdminApproveView.as_view(), name='approve'),
     path('withdrawals/<str:withdrawal_id>/reject/', views.AdminRejectView.as_view(), name='reject'),
     path('withdrawals/<str:withdrawal_id>/processing/', views.AdminProcessingView.as_view(), name='processing'),

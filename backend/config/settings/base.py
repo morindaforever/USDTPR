@@ -301,6 +301,11 @@ STORAGES = {
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# User uploads (deposit screenshots, withdrawal QR images) live in private
+# media, served ONLY through authenticated views — never by the web server.
+# Override the cap per environment if needed (bytes).
+MAX_UPLOAD_BYTES = env.int('MAX_UPLOAD_BYTES', default=5 * 1024 * 1024)
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Public URL of the frontend — used to build shareable referral links

@@ -123,19 +123,22 @@ def quote(amount, network_code: str | None = None) -> dict:
     amount = Decimal(amount)
     if amount <= 0:
         raise WithdrawalError('Amount must be positive.')
-    minimum = config.get_min_amount()
+    network = None
+    if network_code:
+        network = Network.objects.filter(code=network_code.strip().upper(), is_active=True).first()
+    minimum = config.get_min_amount(network)
     if amount < minimum:
         raise WithdrawalError(
             f'Minimum withdrawal is {minimum.quantize(Decimal("0.01"))} USDT.',
             errors={'amount': [f'Minimum withdrawal is {minimum.quantize(Decimal("0.01"))} USDT.']},
         )
-    fee, net = config.calculate_net(amount)
+    fee, net = config.calculate_net(amount, network)
     return {
         'amount': str(amount.quantize(Decimal('0.01'))),
         'fee': str(fee.quantize(Decimal('0.01'))),
         'net_amount': str(net.quantize(Decimal('0.01'))),
         'minimum_amount': str(minimum.quantize(Decimal('0.01'))),
-        'fee_type': config.get_fee_type(),
+        'fee_type': config.get_fee_type(network),
     }
 
 
@@ -150,12 +153,17 @@ def create_withdrawal(
     destination_address: str,
     amount,
     idempotency_key: str,
+    qr_image=None,
 ) -> Withdrawal:
     """Validate, lock funds, and create a PENDING withdrawal — atomically.
 
     Concurrent requests serialize on the wallet row lock inside
     ``wallet_service.lock``: the second of two over-drawing requests fails
     with InsufficientBalanceError and the whole block rolls back (§37).
+
+    ``qr_image`` is an optional user-uploaded QR destination image (§7).
+    It is stored for reviewer context only — the typed wallet_address is
+    always the authoritative payout destination.
 
     Returns ``(withdrawal, created)`` — a replayed idempotency key returns
     the ORIGINAL request with ``created=False`` (§35) rather than a copy.
@@ -185,7 +193,11 @@ def create_withdrawal(
     # Reject sub-cent / over-precise amounts (§77): quantize to 2dp and
     # require the value to be unchanged.
     amount_decimal = amount_decimal.quantize(Decimal('0.01'))
-    minimum = config.get_min_amount()
+    network = Network.objects.filter(code=(network_code or '').strip().upper(), is_active=True).first()
+    if network is None:
+        raise WithdrawalError('Selected network is not available.',
+                              errors={'network': ['Selected network is not available.']})
+    minimum = config.get_min_amount(network)
     if amount_decimal < minimum:
         raise WithdrawalError(
             f'Minimum withdrawal is {minimum.quantize(Decimal("0.01"))} USDT.',
@@ -202,27 +214,33 @@ def create_withdrawal(
     if existing is not None:
         return existing, False
 
-    network = Network.objects.filter(code=(network_code or '').strip().upper(), is_active=True).first()
-    if network is None:
-        raise WithdrawalError('Selected network is not available.',
-                              errors={'network': ['Selected network is not available.']})
-
     try:
         address = validate_address(network.code, destination_address)
     except AddressValidationError as exc:
         raise WithdrawalError(exc.message, errors={'destination_address': [exc.message]})
 
-    fee, net = config.calculate_net(amount_decimal)
+    fee, net = config.calculate_net(amount_decimal, network)
 
     # Lock FIRST — InsufficientBalanceError rolls the whole block back (§21).
-    lock(
-        user=user,
-        amount=amount_decimal,
-        reference_type='withdrawal',
-        reference_id='pending',  # replaced below once the ID exists
-        description=f'Withdrawal lock — {amount_decimal.quantize(Decimal("0.01"))} USDT',
-        idempotency_key=f'WDR_NEW_{key}',
-    )
+    # Wrap it into a user-safe explanation: the withdrawable bucket is funded
+    # ONLY by VIP plan profits and referral commissions — deposit balance is
+    # spendable on VIP plans, never withdrawable.
+    try:
+        lock(
+            user=user,
+            amount=amount_decimal,
+            reference_type='withdrawal',
+            reference_id='pending',  # replaced below once the ID exists
+            description=f'Withdrawal lock — {amount_decimal.quantize(Decimal("0.01"))} USDT',
+            idempotency_key=f'WDR_NEW_{key}',
+        )
+    except InsufficientBalanceError as exc:
+        raise WithdrawalError(
+            'Insufficient withdrawable balance. Only VIP plan profits and '
+            'referral commissions can be withdrawn — deposit balance is used '
+            'for plan purchases.',
+            errors={'amount': [str(exc.message)]},
+        ) from exc
 
     withdrawal = Withdrawal.objects.create(
         user=user,
@@ -231,6 +249,7 @@ def create_withdrawal(
         fee_amount=fee,
         net_amount=net,
         wallet_address=address,
+        qr_image=qr_image,
         status=Withdrawal.Status.PENDING,
         idempotency_key=key,
     )

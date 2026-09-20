@@ -14,7 +14,7 @@ from apps.wallet.pagination import EnvelopePagination
 
 from .admin_permissions import IsAdminUser
 from .models import Deposit
-from .serializers import DepositSerializer
+from .serializers import AdminDepositSerializer, DepositSerializer
 from .services import approve_deposit, get_active_address, reject_deposit
 
 
@@ -29,7 +29,7 @@ class AdminDepositListView(ListAPIView):
     tx_hash, date_from/date_to (inclusive). Paginated 20/page.
     """
 
-    serializer_class = DepositSerializer
+    serializer_class = AdminDepositSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     pagination_class = EnvelopePagination
 
@@ -75,7 +75,7 @@ class AdminDepositListView(ListAPIView):
 class AdminDepositDetailView(RetrieveAPIView):
     """GET /api/admin/deposits/<deposit_id>/ — full admin detail view."""
 
-    serializer_class = DepositSerializer
+    serializer_class = AdminDepositSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     lookup_field = 'deposit_id'
     lookup_url_kwarg = 'deposit_id'
@@ -132,7 +132,7 @@ class AdminDepositActionView(APIView):
             {
                 'success': True,
                 'message': message,
-                'data': DepositSerializer(deposit).data,
+                'data': AdminDepositSerializer(deposit).data,
             }
         )
 
@@ -143,6 +143,79 @@ class AdminDepositActionView(APIView):
 class AdminDepositApproveView(AdminDepositActionView):
     def post(self, request, deposit_id: str):  # pragma: no cover - delegates
         return super().post(request, deposit_id, 'approve')
+
+
+class AdminDepositNoteView(APIView):
+    """PATCH /api/admin/deposits/<deposit_id>/note/ — reviewer note only.
+
+    Lets an admin record review context on any deposit without changing its
+    status. Approved/rejected deposits are immutable except for this note
+    (§2: editing an approved deposit must not alter financial terms).
+    """
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def patch(self, request, deposit_id: str):
+        deposit = Deposit.objects.filter(deposit_id=deposit_id).first()
+        if deposit is None:
+            return Response(
+                {'success': False, 'message': 'Deposit not found.', 'errors': {}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        note = ((request.data or {}).get('admin_note') or '').strip()
+        if len(note) > 2000:
+            return Response(
+                {'success': False, 'message': 'Note is too long (max 2000 characters).', 'errors': {}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        deposit.admin_note = note
+        deposit.save(update_fields=['admin_note', 'updated_at'])
+        from apps.core.models import AuditLog
+
+        AuditLog.objects.create(
+            actor_user=request.user,
+            action=AuditLog.Action.UPDATE,
+            target_type='deposit',
+            target_id=deposit.deposit_id,
+            description=f'Admin note updated on deposit {deposit.deposit_id}.',
+        )
+        return Response(
+            {'success': True, 'message': 'Note saved.', 'data': AdminDepositSerializer(deposit).data}
+        )
+
+    def handle_exception(self, exc):
+        return api_exception_handler(exc, _exception_context(self))
+
+
+class AdminDepositScreenshotView(APIView):
+    """GET /api/admin/deposits/<deposit_id>/screenshot/ — staff-only image.
+
+    Private-media proxy: the file is never on a public static path.
+    """
+
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request, deposit_id: str):
+        deposit = Deposit.objects.filter(deposit_id=deposit_id).first()
+        if deposit is None or not deposit.screenshot:
+            return Response(
+                {'success': False, 'message': 'Screenshot not found.', 'errors': {}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        from django.core.files.storage import default_storage
+
+        if not default_storage.exists(deposit.screenshot.name):
+            return Response(
+                {'success': False, 'message': 'Screenshot file is missing.', 'errors': {}},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        with default_storage.open(deposit.screenshot.name, 'rb') as handle:
+            from django.http import FileResponse
+
+            return FileResponse(handle, content_type='application/octet-stream')
+
+    def handle_exception(self, exc):
+        return api_exception_handler(exc, _exception_context(self))
 
 
 # --------------------------------------------------------------------------- #
@@ -284,24 +357,44 @@ class AdminDepositAddressDetailView(APIView):
 
 
 class AdminNetworkListView(APIView):
-    """GET/PATCH /api/admin/networks/ — network activation management."""
+    """GET/PATCH /api/admin/networks/ — network configuration management.
+
+    GET exposes the full per-network configuration; PATCH accepts any
+    subset of is_active/name/contract_address/min_deposit/min_withdrawal/
+    withdrawal_fee/withdrawal_fee_is_percent/network_warning/instructions.
+    Everything here is public display or business-rule configuration — no
+    secrets are ever stored on Network rows (§8).
+    """
 
     permission_classes = [IsAuthenticated, IsAdminUser]
 
+    MONEY_FIELDS = {
+        'min_deposit': 'min_deposit',
+        'min_withdrawal': 'min_withdrawal',
+        'withdrawal_fee': 'withdrawal_fee',
+    }
+
+    @staticmethod
+    def _serialize_network(row: Network) -> dict:
+        active = get_active_address(row)
+        return {
+            'id': row.pk,
+            'code': row.code,
+            'name': row.name,
+            'asset': row.asset,
+            'is_active': row.is_active,
+            'current_address': active.address if active else None,
+            'contract_address': row.contract_address,
+            'min_deposit': str(row.min_deposit) if row.min_deposit is not None else None,
+            'min_withdrawal': str(row.min_withdrawal) if row.min_withdrawal is not None else None,
+            'withdrawal_fee': str(row.withdrawal_fee) if row.withdrawal_fee is not None else None,
+            'withdrawal_fee_is_percent': row.withdrawal_fee_is_percent,
+            'network_warning': row.network_warning,
+            'instructions': row.instructions,
+        }
+
     def get(self, request):
-        data = []
-        for row in Network.objects.all().order_by('sort_order', 'code'):
-            active = get_active_address(row)
-            data.append(
-                {
-                    'id': row.pk,
-                    'code': row.code,
-                    'name': row.name,
-                    'asset': row.asset,
-                    'is_active': row.is_active,
-                    'current_address': active.address if active else None,
-                }
-            )
+        data = [self._serialize_network(row) for row in Network.objects.all().order_by('sort_order', 'code')]
         return Response({'success': True, 'message': 'OK', 'data': data})
 
     def patch(self, request, pk: int):
@@ -311,10 +404,87 @@ class AdminNetworkListView(APIView):
                 {'success': False, 'message': 'Network not found.', 'errors': {}},
                 status=status.HTTP_404_NOT_FOUND,
             )
-        desired = bool((request.data or {}).get('is_active'))
-        if row.is_active != desired:
-            row.is_active = desired
-            row.save(update_fields=['is_active'])
+        payload = request.data or {}
+        changes = []
+        errors = {}
+
+        if 'name' in payload:
+            name = (payload.get('name') or '').strip()
+            if not name:
+                errors['name'] = ['Name cannot be empty.']
+            elif name != row.name:
+                row.name = name
+                changes.append('name')
+
+        if 'is_active' in payload:
+            desired = bool(payload.get('is_active'))
+            if row.is_active != desired:
+                row.is_active = desired
+                changes.append('activated' if desired else 'deactivated')
+
+        if 'contract_address' in payload:
+            contract = (payload.get('contract_address') or '').strip()
+            if len(contract) > 255:
+                errors['contract_address'] = ['Too long (max 255 characters).']
+            elif contract != row.contract_address:
+                row.contract_address = contract
+                changes.append('contract_address')
+
+        for payload_key, field in self.MONEY_FIELDS.items():
+            if payload_key not in payload:
+                continue
+            raw = (payload.get(payload_key) or '').strip()
+            if raw == '':
+                if getattr(row, field) is not None:
+                    setattr(row, field, None)  # clear → inherit global rule
+                    changes.append(f'{payload_key} cleared (inherits global default)')
+                continue
+            from decimal import Decimal, InvalidOperation
+
+            try:
+                value = Decimal(raw)
+            except InvalidOperation:
+                errors[payload_key] = ['Must be a decimal number or empty.']
+                continue
+            if value <= 0 and payload_key != 'withdrawal_fee':
+                errors[payload_key] = ['Must be greater than zero (or empty to inherit the default).']
+                continue
+            if value < 0:
+                errors[payload_key] = ['Cannot be negative (or empty to inherit the default).']
+                continue
+            if getattr(row, field) != value:
+                setattr(row, field, value)
+                changes.append(payload_key)
+
+        if 'withdrawal_fee_is_percent' in payload:
+            raw = payload.get('withdrawal_fee_is_percent')
+            if raw in ('', None):
+                desired = None
+            elif isinstance(raw, bool):
+                desired = raw
+            else:
+                desired = str(raw).strip().lower() in ('true', '1', 'yes')
+            if row.withdrawal_fee_is_percent != desired:
+                row.withdrawal_fee_is_percent = desired
+                changes.append('withdrawal_fee_is_percent')
+
+        for text_field in ('network_warning', 'instructions'):
+            if text_field in payload:
+                value = (payload.get(text_field) or '').strip()
+                if len(value) > (500 if text_field == 'network_warning' else 4000):
+                    errors[text_field] = ['Too long.']
+                elif value != getattr(row, text_field):
+                    setattr(row, text_field, value)
+                    changes.append(text_field)
+
+        if errors:
+            return Response(
+                {'success': False, 'message': 'Please correct the highlighted fields.', 'errors': errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if changes:
+            row.save()
             from apps.core.models import AuditLog
 
             AuditLog.objects.create(
@@ -322,13 +492,13 @@ class AdminNetworkListView(APIView):
                 action=AuditLog.Action.UPDATE,
                 target_type='network',
                 target_id=str(row.pk),
-                description=f'Network {row.code} {"activated" if desired else "deactivated"}.',
+                description=f'Network {row.code} updated: {", ".join(changes)}.',
             )
         return Response(
             {
                 'success': True,
-                'message': 'Network updated.',
-                'data': {'id': row.pk, 'code': row.code, 'is_active': row.is_active},
+                'message': 'Network updated.' if changes else 'No changes.',
+                'data': self._serialize_network(row),
             }
         )
 
@@ -341,5 +511,7 @@ __all__ = [
     'AdminDepositAddressListCreateView',
     'AdminDepositDetailView',
     'AdminDepositListView',
+    'AdminDepositNoteView',
+    'AdminDepositScreenshotView',
     'AdminNetworkListView',
 ]

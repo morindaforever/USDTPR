@@ -16,7 +16,8 @@ interface WithdrawalConfirmModalProps {
 
 /**
  * Confirmation dialog (§17). Shows the exact figures the backend quoted;
- * the server response on confirm remains authoritative.
+ * the server response on confirm remains authoritative. The user must
+ * explicitly confirm after reviewing the network and destination.
  */
 export function WithdrawalConfirmModal({
   open,
@@ -86,6 +87,15 @@ export function WithdrawalConfirmModal({
             </>
           )}
         </dl>
+
+        <div className="rounded-xl bg-sky-50 p-3 text-xs leading-relaxed text-sky-900 ring-1 ring-inset ring-sky-200">
+          You are requesting to withdraw{' '}
+          <strong>{quote ? `${formatUsdt(quote.amount)} USDT` : '—'}</strong> on{' '}
+          <strong>{network ? `${network.name} (${network.code})` : '—'}</strong> to:
+          <span className="mt-1 block break-all font-mono text-[11px]">{address}</span>
+          Please verify the network and address before submitting. Transfers
+          to a wrong network cannot be reversed.
+        </div>
 
         {errorMessage && (
           <Alert tone="danger" title="Submission failed">

@@ -47,8 +47,14 @@ def invalidate_cache() -> None:
     _fee_cache.clear()
 
 
-def get_min_amount() -> Decimal:
-    """Configured minimum withdrawal amount (§13)."""
+def get_min_amount(network=None) -> Decimal:
+    """Configured minimum withdrawal amount (§13).
+
+    A per-network override (Network.min_withdrawal) wins; otherwise the
+    global ``withdrawal.min_amount`` SiteSetting applies.
+    """
+    if network is not None and getattr(network, 'min_withdrawal', None) is not None:
+        return network.min_withdrawal
     cached = _fee_cache.get('min')
     if cached is not None:
         return cached  # type: ignore[return-value]
@@ -57,8 +63,10 @@ def get_min_amount() -> Decimal:
     return value
 
 
-def get_fee_type() -> str:
-    """'FIXED' or 'PERCENT'."""
+def get_fee_type(network=None) -> str:
+    """'FIXED' or 'PERCENT' (per-network override wins)."""
+    if network is not None and getattr(network, 'withdrawal_fee_is_percent', None) is not None:
+        return 'PERCENT' if network.withdrawal_fee_is_percent else 'FIXED'
     cached = _fee_cache.get('type')
     if cached is not None:
         return str(cached)
@@ -69,8 +77,10 @@ def get_fee_type() -> str:
     return value
 
 
-def get_fee_amount() -> Decimal:
-    """Fee magnitude: USDT when FIXED, percent when PERCENT."""
+def get_fee_amount(network=None) -> Decimal:
+    """Fee magnitude: USDT when FIXED, percent when PERCENT (per-network wins)."""
+    if network is not None and getattr(network, 'withdrawal_fee', None) is not None:
+        return network.withdrawal_fee
     cached = _fee_cache.get('amount')
     if cached is not None:
         return cached  # type: ignore[return-value]
@@ -79,10 +89,10 @@ def get_fee_amount() -> Decimal:
     return value
 
 
-def calculate_fee(amount: Decimal) -> Decimal:
+def calculate_fee(amount: Decimal, network=None) -> Decimal:
     """Fee for ``amount`` per the configured rule (§14–15), Decimal only."""
-    fee_type = get_fee_type()
-    fee_amount = get_fee_amount()
+    fee_type = get_fee_type(network)
+    fee_amount = get_fee_amount(network)
     if fee_type == 'PERCENT':
         fee = (amount * fee_amount / Decimal('100'))
     else:
@@ -91,8 +101,8 @@ def calculate_fee(amount: Decimal) -> Decimal:
     return min(fee, amount)
 
 
-def calculate_net(amount: Decimal) -> tuple[Decimal, Decimal]:
+def calculate_net(amount: Decimal, network=None) -> tuple[Decimal, Decimal]:
     """Return ``(fee, net)`` for a requested amount."""
-    fee = calculate_fee(amount).quantize(Decimal('0.00000001'))
+    fee = calculate_fee(amount, network).quantize(Decimal('0.00000001'))
     net = (amount - fee).quantize(Decimal('0.00000001'))
     return fee, net
