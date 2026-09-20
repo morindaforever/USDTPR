@@ -34,6 +34,12 @@ class VIPPlan(TimeStampedModel):
             models.CheckConstraint(check=models.Q(daily_rate__gt=0), name='vipplan_rate_positive'),
         ]
 
+    @property
+    def is_welcome_plan(self) -> bool:
+        """Zero-investment promotional plan (identified by name, not a flag
+        column — no new fields/migrations)."""
+        return self.name.upper().startswith('WELCOME')
+
     def __str__(self) -> str:
         return f'{self.name} (#{self.plan_number})'
 

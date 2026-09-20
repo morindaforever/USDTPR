@@ -439,8 +439,13 @@ def get_purchase_progress(purchase: VIPPurchase, rewarded: Decimal | None = None
 
     ``rewarded`` may carry a pre-aggregated sum (``active_purchases_with_progress``
     annotation) to avoid a per-row query; otherwise it is computed here.
+
+    Zero-investment WELCOME grants are credited once at claim time (mirrored
+    into ``amount_received``) without daily VIPReward rows, so the reported
+    total is never less than the transactionally-maintained amount.
     """
     rewarded = get_rewarded_amount(purchase) if rewarded is None else rewarded.quantize(QUANT)
+    rewarded = max(rewarded, purchase.amount_received.quantize(QUANT))
     remaining = max(Decimal('0'), purchase.target_amount - rewarded).quantize(QUANT)
     target = purchase.target_amount
     percent = (rewarded / target * 100) if target > 0 else Decimal('100')

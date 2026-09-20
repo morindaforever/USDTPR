@@ -297,6 +297,21 @@ class AdminWithdrawalTests(APITestCase):
         wd_config.invalidate_cache()
         from apps.withdrawals import services as ws
 
+        # Withdrawal-eligibility fixture: a paid VIP purchase unlocks withdrawals.
+        from apps.vip.models import VIPPlan as _VP, VIPPurchase as _VPur
+
+        _paid, _ = _VP.objects.get_or_create(
+            name='VIP 1', defaults={
+                'plan_number': 1, 'investment_amount': Decimal('10'),
+                'target_amount': Decimal('15'), 'daily_rate': Decimal('0.25'),
+            },
+        )
+        _VPur.objects.create(
+            user=self.user, vip_plan=_paid, plan_name_snapshot=_paid.name,
+            investment_amount=_paid.investment_amount, target_amount=_paid.target_amount,
+            daily_rate_snapshot=_paid.daily_rate, status='ACTIVE',
+            idempotency_key=f'TEST_PAID_VIP_admin_{self.user.pk}',
+        )
         self.withdrawal, _ = ws.create_withdrawal(
             user=self.user, network_code='TRX',
             destination_address='Th82pJGF9p7kpzb6eU326EFZf2cDnimbTF',
@@ -372,6 +387,49 @@ class AdminVIPTests(APITestCase):
         response = self.client.post('/api/admin/vip-plans/', {
             'name': 'Bad', 'plan_number': 9, 'investment_amount': '20.00',
             'target_amount': '15.00', 'daily_rate': '0.25',
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_welcome_plan_allows_zero_investment(self):
+        """A WELCOME plan may set investment_amount = 0 (promotional plan)."""
+        response = self.client.post('/api/admin/vip-plans/', {
+            'name': 'WELCOME', 'plan_number': 50, 'investment_amount': '0.00',
+            'target_amount': '10.00', 'daily_rate': '0.25', 'is_active': True,
+        }, format='json')
+        self.assertEqual(response.status_code, 201)
+        plan = VIPPlan.objects.get(name='WELCOME', plan_number=50)
+        self.assertEqual(plan.investment_amount, Decimal('0.00'))
+        self.assertEqual(plan.target_amount, Decimal('10.00'))
+
+    def test_welcome_plan_can_be_edited_while_zero(self):
+        plan = VIPPlan.objects.create(
+            name='WELCOME', plan_number=51, investment_amount=Decimal('0'),
+            target_amount=Decimal('10'), daily_rate=Decimal('0.25'),
+        )
+        response = self.client.patch(f'/api/admin/vip-plans/{plan.pk}/', {
+            'target_amount': '12.00',
+        }, format='json')
+        self.assertEqual(response.status_code, 200)
+        plan.refresh_from_db()
+        self.assertEqual(plan.investment_amount, Decimal('0.00'))
+        self.assertEqual(plan.target_amount, Decimal('12.00'))
+
+    def test_zero_investment_rejected_for_paid_plans(self):
+        """Non-WELCOME plans still require a positive investment amount."""
+        response = self.client.post('/api/admin/vip-plans/', {
+            'name': 'Freebie', 'plan_number': 52, 'investment_amount': '0.00',
+            'target_amount': '10.00', 'daily_rate': '0.25',
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('investment_amount', response.json().get('errors', {}))
+        # Renaming a paid plan to WELCOME on edit makes 0 acceptable; renaming
+        # a zero plan to a paid name with 0 investment stays rejected.
+        plan = VIPPlan.objects.create(
+            name='Temp Paid', plan_number=53, investment_amount=Decimal('5'),
+            target_amount=Decimal('10'), daily_rate=Decimal('0.25'),
+        )
+        response = self.client.patch(f'/api/admin/vip-plans/{plan.pk}/', {
+            'investment_amount': '0.00',
         }, format='json')
         self.assertEqual(response.status_code, 400)
 

@@ -138,6 +138,8 @@ export interface VipPlan {
   daily_rate: string;
   daily_rate_percent: string;
   profit_amount: string;
+  /** Zero-investment promotional plan (server-flagged). */
+  is_welcome_plan?: boolean;
   is_active: boolean;
 }
 
@@ -317,6 +319,8 @@ export interface WithdrawalSummary {
   withdrawable_balance: string;
   locked_balance: string;
   pending_withdrawals: string;
+  /** Server-side VIP1+ eligibility (Welcome Plan does not qualify). */
+  can_withdraw?: boolean;
 }
 
 /** Informational quote from POST /api/withdrawals/quote/ (§47). */

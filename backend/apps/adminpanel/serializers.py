@@ -81,9 +81,17 @@ class AdminUserActionSerializer(serializers.Serializer):
 
 
 class AdminVIPPlanSerializer(serializers.ModelSerializer):
-    """Plan write serializer — explicit whitelist only (§31–32)."""
+    """Plan write serializer — explicit whitelist only (§31–32).
 
-    investment_amount = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=Decimal('0.01'))
+    Conditional investment validation: a zero-investment WELCOME plan may
+    set ``investment_amount = 0`` (promotional plan); every normal paid
+    plan must still have a positive investment. Identification uses the
+    plan NAME (WELCOME prefix) — no extra flag field, no migration.
+    """
+
+    investment_amount = serializers.DecimalField(
+        max_digits=18, decimal_places=2, min_value=Decimal('0'),
+    )
     target_amount = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=Decimal('0.01'))
     daily_rate = serializers.DecimalField(max_digits=5, decimal_places=4, min_value=Decimal('0.0001'), max_value=Decimal('1.0000'))
 
@@ -109,6 +117,13 @@ class AdminVIPPlanSerializer(serializers.ModelSerializer):
         if target is not None and investment is not None and target <= investment:
             raise serializers.ValidationError(
                 {'target_amount': ['Target amount must exceed the investment amount.']}
+            )
+        # Zero investment is reserved for the WELCOME promotional plan.
+        name = attrs.get('name', getattr(self.instance, 'name', '') if self.instance else '')
+        is_welcome = bool(name) and name.strip().upper().startswith('WELCOME')
+        if investment is not None and investment <= 0 and not is_welcome:
+            raise serializers.ValidationError(
+                {'investment_amount': ['Investment amount must be greater than zero for paid plans.']}
             )
         return attrs
 

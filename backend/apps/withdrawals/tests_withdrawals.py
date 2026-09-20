@@ -8,6 +8,7 @@ user isolation (§69), admin authorization (§70), and tamper resistance
 (§63, §77). Simulated-withdrawal separation is asserted as well (§83).
 """
 
+import re
 from decimal import Decimal
 from threading import Barrier, Thread
 
@@ -26,7 +27,7 @@ from apps.wallet.services import (
     get_wallet_summary,
 )
 
-from . import config
+from . import config, services
 from .address_validation import AddressValidationError, validate_address
 from .models import Withdrawal
 from .reconciliation import reconcile_user_withdrawals
@@ -65,6 +66,34 @@ def _fund(user: User, amount: str) -> None:
         direction=WalletTransaction.Direction.CREDIT,
         reason='test funding',
     )
+
+
+def _grant_paid_vip(user: User, suffix: str, plan_name: str = 'VIP 1'):
+    """Fixture: a paid VIP purchase record (withdrawal-eligibility unlock).
+
+    Creates the VIPPurchase snapshot row directly — the eligibility gate
+    reads purchase records joined to the plan, so a paid-VIP fixture
+    unlocks withdrawals without running the full purchase flow. The
+    created plan's ``plan_number`` is derived from the name ("VIP 2" → 2)
+    so fixtures reflect real plan numbering. Returns the VIPPlan used.
+    """
+    from apps.vip.models import VIPPlan, VIPPurchase
+
+    match = re.search(r'(\d+)\s*$', plan_name)
+    plan_number = int(match.group(1)) if match else 1
+    plan = VIPPlan.objects.filter(name=plan_name).first()
+    if plan is None:
+        plan = VIPPlan.objects.create(
+            name=plan_name, plan_number=plan_number, investment_amount=Decimal('10'),
+            target_amount=Decimal('15'), daily_rate=Decimal('0.25'),
+        )
+    VIPPurchase.objects.create(
+        user=user, vip_plan=plan, plan_name_snapshot=plan.name,
+        investment_amount=plan.investment_amount, target_amount=plan.target_amount,
+        daily_rate_snapshot=plan.daily_rate, status=VIPPurchase.Status.ACTIVE,
+        idempotency_key=f'TEST_PAID_VIP_{suffix}',
+    )
+    return plan
 
 
 def _balance(user: User) -> dict:
@@ -153,6 +182,7 @@ class WithdrawalCreationTests(TestCase):
     def setUpTestData(cls) -> None:
         call_command('seed_demo_data', verbosity=0)
         cls.user = _mk('wd-create@example.com', 10)
+        _grant_paid_vip(cls.user, 'create')
 
     def test_create_locks_funds_once(self) -> None:
         _fund(self.user, '50')
@@ -351,6 +381,7 @@ class WithdrawalStateTests(TestCase):
             email='wd-admin@example.com', password=PASSWORD, phone='+19955500001',
         )
         cls.user = _mk('wd-state@example.com', 20)
+        _grant_paid_vip(cls.user, 'state')
 
     def _make(self, key: str, amount: str = '20.00') -> Withdrawal:
         _fund(self.user, '100')
@@ -474,6 +505,7 @@ class WithdrawalConcurrencyTests(TransactionTestCase):
     def setUp(self) -> None:
         call_command('seed_demo_data', verbosity=0)
         self.user = _mk(f'wd-conc@example.com', 30)
+        _grant_paid_vip(self.user, 'conc')
 
     def test_only_one_overdraw_wins(self) -> None:
         _fund(self.user, '20')
@@ -521,6 +553,8 @@ class WithdrawalAPITests(TestCase):
         )
         cls.a = _mk('wd-api-a@example.com', 40)
         cls.b = _mk('wd-api-b@example.com', 41)
+        _grant_paid_vip(cls.a, 'api-a')
+        _grant_paid_vip(cls.b, 'api-b')
 
     def setUp(self) -> None:
         from rest_framework.test import APIClient
@@ -724,6 +758,7 @@ class WithdrawalReconciliationTests(TestCase):
             email='wd-recon-admin@example.com', password=PASSWORD, phone='+19955500001',
         )
         cls.user = _mk('wd-recon@example.com', 10)
+        _grant_paid_vip(cls.user, 'recon')
 
     def test_clean_lifecycle_reports_no_issues(self) -> None:
         _fund(self.user, '50')
@@ -781,3 +816,161 @@ class WithdrawalReconciliationTests(TestCase):
         Withdrawal.objects.update(net_amount=Decimal('9.00'))
         issues = reconcile_user_withdrawals(self.user)
         self.assertTrue(any('fee mismatch' in i for i in issues))
+
+
+class WithdrawalEligibilityTests(TestCase):
+    """VIP1+ withdrawal eligibility (server-side; Welcome does NOT qualify)."""
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        call_command('seed_demo_data', verbosity=0)
+        cls.user = _mk('wd-elig@example.com', 50)
+
+    def _attempt(self, key: str):
+        return create_withdrawal(
+            user=self.user, network_code='TRX', destination_address=TRON_ADDRESS,
+            amount=Decimal('10.00'), idempotency_key=key,
+        )
+
+    def test_no_vip_rejected_no_record(self) -> None:
+        _fund(self.user, '50')
+        with self.assertRaises(WithdrawalError) as ctx:
+            self._attempt('elig-none-1')
+        self.assertIn('must purchase at least VIP 1', ctx.exception.message)
+        self.assertFalse(Withdrawal.objects.filter(user=self.user).exists())
+        # Nothing was locked either.
+        summary = get_wallet_summary(self.user)
+        self.assertEqual(summary['withdrawable_balance'], Decimal('50'))
+        self.assertEqual(summary['locked_balance'], Decimal('0'))
+
+    def test_welcome_only_rejected(self) -> None:
+        from apps.vip.models import VIPPlan, VIPPurchase
+
+        welcome = VIPPlan.objects.get(name='WELCOME')
+        VIPPurchase.objects.create(
+            user=self.user, vip_plan=welcome, plan_name_snapshot=welcome.name,
+            investment_amount=Decimal('0'), target_amount=Decimal('10'),
+            daily_rate_snapshot=welcome.daily_rate, status=VIPPurchase.Status.COMPLETED,
+            idempotency_key='TEST_WELCOME_only',
+        )
+        _fund(self.user, '50')
+        with self.assertRaises(WithdrawalError) as ctx:
+            self._attempt('elig-welcome-1')
+        self.assertIn('must purchase at least VIP 1', ctx.exception.message)
+        self.assertIn('Welcome Plan does not qualify', ctx.exception.errors['vip_plan'][0])
+        self.assertFalse(Withdrawal.objects.filter(user=self.user).exists())
+
+    def test_vip1_unlocks_withdrawal(self) -> None:
+        _grant_paid_vip(self.user, 'elig-vip1')
+        _fund(self.user, '50')
+        withdrawal, created = self._attempt('elig-vip1-ok')
+        self.assertTrue(created)
+        self.assertEqual(withdrawal.status, Withdrawal.Status.PENDING)
+
+    def test_vip2_plus_unlocks_withdrawal(self) -> None:
+        _grant_paid_vip(self.user, 'elig-vip2', plan_name='VIP 2')
+        _fund(self.user, '50')
+        withdrawal, created = self._attempt('elig-vip2-ok')
+        self.assertTrue(created)
+
+    def test_cancelled_paid_purchase_does_not_qualify(self) -> None:
+        from apps.vip.models import VIPPurchase
+
+        _grant_paid_vip(self.user, 'elig-cancelled')
+        VIPPurchase.objects.filter(user=self.user).update(status=VIPPurchase.Status.CANCELLED)
+        _fund(self.user, '50')
+        with self.assertRaises(WithdrawalError):
+            self._attempt('elig-cancelled-1')
+        self.assertFalse(Withdrawal.objects.filter(user=self.user).exists())
+
+    def test_api_rejects_ineligible_user_with_envelope(self) -> None:
+        """Direct API bypass attempt → 400 envelope, no withdrawal created."""
+        from rest_framework.test import APIClient
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        _fund(self.user, '50')
+        client = APIClient()
+        token = RefreshToken.for_user(self.user)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        response = client.post('/api/withdrawals/', {
+            'network': 'TRX', 'destination_address': TRON_ADDRESS,
+            'amount': '10.00', 'idempotency_key': 'elig-api-1',
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+        body = response.json()
+        self.assertFalse(body['success'])
+        self.assertIn('must purchase at least VIP 1', body['message'])
+        self.assertFalse(Withdrawal.objects.filter(user=self.user).exists())
+
+    def test_summary_reports_can_withdraw(self) -> None:
+        from rest_framework.test import APIClient
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        client = APIClient()
+        token = RefreshToken.for_user(self.user)
+        client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        response = client.get('/api/withdrawals/summary/')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['data']['can_withdraw'])
+        _grant_paid_vip(self.user, 'elig-summary')
+        response = client.get('/api/withdrawals/summary/')
+        self.assertTrue(response.json()['data']['can_withdraw'])
+
+    def test_existing_validations_still_fire(self) -> None:
+        """Eligible user: balance/min/network/address checks unchanged."""
+        _grant_paid_vip(self.user, 'elig-valid')
+        with self.assertRaises(WithdrawalError):
+            self._attempt('elig-nobalance')  # unfunded wallet → insufficient
+        _fund(self.user, '8')
+        with self.assertRaises(WithdrawalError):  # 3.00 < minimum 5.00
+            create_withdrawal(
+                user=self.user, network_code='TRX', destination_address=TRON_ADDRESS,
+                amount=Decimal('3.00'), idempotency_key='elig-below-min',
+            )
+        _fund(self.user, '50')
+        with self.assertRaises(WithdrawalError):  # unknown network
+            create_withdrawal(
+                user=self.user, network_code='NOPE', destination_address=TRON_ADDRESS,
+                amount=Decimal('10.00'), idempotency_key='elig-bad-network',
+            )
+        with self.assertRaises(WithdrawalError):  # wrong-format address
+            create_withdrawal(
+                user=self.user, network_code='TRX', destination_address='0x' + 'a' * 40,
+                amount=Decimal('10.00'), idempotency_key='elig-bad-address',
+            )
+        self.assertFalse(Withdrawal.objects.filter(user=self.user).exists())
+
+    def test_paid_plan_below_vip1_does_not_qualify(self) -> None:
+        """A PAID plan numbered below VIP 1 (plan_number < 1) never unlocks
+        withdrawals — eligibility joins the related VIPPlan, not the name.
+        The seeded plan_number=0 row is turned into a PAID non-welcome plan
+        for this test (TestCase rolls the mutation back)."""
+        from apps.vip.models import VIPPlan, VIPPurchase
+
+        zero = VIPPlan.objects.get(plan_number=0)
+        zero.name = 'PROMO PLUS'
+        zero.investment_amount = Decimal('10')
+        zero.save()
+        VIPPurchase.objects.create(
+            user=self.user, vip_plan=zero, plan_name_snapshot=zero.name,
+            investment_amount=zero.investment_amount, target_amount=zero.target_amount,
+            daily_rate_snapshot=zero.daily_rate, status=VIPPurchase.Status.ACTIVE,
+            idempotency_key='TEST_PAID_VIP_promo0',
+        )
+        self.assertFalse(services.has_qualifying_vip(self.user))
+        _fund(self.user, '50')
+        with self.assertRaises(WithdrawalError):
+            self._attempt('elig-promo0-1')
+        self.assertFalse(Withdrawal.objects.filter(user=self.user).exists())
+
+        # plan_number 1 (VIP 1) does qualify, on the same account.
+        _grant_paid_vip(self.user, 'elig-promo0-vip1')
+        self.assertTrue(services.has_qualifying_vip(self.user))
+        withdrawal, created = self._attempt('elig-promo0-ok')
+        self.assertTrue(created)
+
+    def test_vip2_fixture_uses_real_plan_number(self) -> None:
+        """The VIP 2+ fixture joins a plan actually numbered 2 (regression)."""
+        plan = _grant_paid_vip(self.user, 'elig-vip2-num', plan_name='VIP 2')
+        self.assertEqual(plan.plan_number, 2)
+        self.assertTrue(services.has_qualifying_vip(self.user))

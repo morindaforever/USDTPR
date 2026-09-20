@@ -19,6 +19,8 @@ class VIPPlanSerializer(serializers.ModelSerializer):
     # daily_rate is a fraction (0.25); percent is a display convenience.
     daily_rate_percent = serializers.SerializerMethodField()
     profit_amount = serializers.SerializerMethodField()
+    # Zero-investment promotional plan (name-based; see VIPPlan.is_welcome_plan).
+    is_welcome_plan = serializers.SerializerMethodField()
 
     class Meta:
         model = VIPPlan
@@ -31,12 +33,16 @@ class VIPPlanSerializer(serializers.ModelSerializer):
             'daily_rate',
             'daily_rate_percent',
             'profit_amount',
+            'is_welcome_plan',
             'is_active',
         ]
         read_only_fields = fields
 
     def get_daily_rate_percent(self, obj: VIPPlan) -> str:
         return str((obj.daily_rate * 100).quantize(_TWO_DP))
+
+    def get_is_welcome_plan(self, obj: VIPPlan) -> bool:
+        return obj.is_welcome_plan
 
     def get_profit_amount(self, obj: VIPPlan) -> str:
         return str((obj.target_amount - obj.investment_amount).quantize(_EIGHT_DP))

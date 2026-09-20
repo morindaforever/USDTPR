@@ -63,7 +63,9 @@ class WithdrawalProductionTests(TestCase):
             email='prod-wdr-admin@example.com', password=PASSWORD, phone='+19988800003',
         )
         from apps.wallet.services import ensure_wallet
+        from apps.withdrawals.tests_withdrawals import _grant_paid_vip
 
+        _grant_paid_vip(cls.user, 'prod-wdr')
         for account in (cls.user, cls.other, cls.admin):
             ensure_wallet(account)
             admin_adjust(

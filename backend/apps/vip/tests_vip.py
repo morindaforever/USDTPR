@@ -335,7 +335,7 @@ class VIPConcurrencyBase(TransactionTestCase):
 class WelcomePlanTests(VIPTestBase):
     def test_first_claim_ok_second_rejected(self) -> None:
         first = self.buy(self.welcome, 'WELCOME_CLAIM_x1')
-        self.assertEqual(first.status, VIPPurchase.Status.ACTIVE)
+        self.assertEqual(first.status, VIPPurchase.Status.COMPLETED)
         with self.assertRaises(VIPError):
             self.buy(self.welcome, 'WELCOME_CLAIM_x2')
         self.assertEqual(VIPPurchase.objects.filter(user=self.user, vip_plan=self.welcome).count(), 1)
@@ -381,9 +381,9 @@ class ConcurrencyTests(VIPConcurrencyBase):
 
 class AccountingInvariantTests(VIPTestBase):
     def test_welcome_claim_is_free_and_guarded(self) -> None:
-        """WELCOME invests 0 → no debit, no ledger row; second claim blocked."""
+        """WELCOME invests 0 → no debit, no purchase debit row; second claim blocked."""
         purchase = self.buy(self.welcome, 'WELCOME_CLAIM_free1')
-        self.assertEqual(purchase.status, VIPPurchase.Status.ACTIVE)
+        self.assertEqual(purchase.status, VIPPurchase.Status.COMPLETED)
         self.refresh()
         self.assertEqual(self.wallet().withdrawable_balance, Decimal('100.00000000'))
         self.assertFalse(
@@ -401,3 +401,55 @@ class AccountingInvariantTests(VIPTestBase):
         self.assertFalse(
             WalletTransaction.objects.filter(user=self.user, transaction_type=TT.VIP_PURCHASE).exists()
         )
+
+
+class WelcomeRewardTests(VIPTestBase):
+    """Zero-investment WELCOME plan claims its promotional reward ONCE, via
+    the existing BONUS ledger bucket — no deposit record, no blockchain txn."""
+
+    def _welcome_ledger(self):
+        return WalletTransaction.objects.filter(
+            user=self.user, transaction_type=TT.WELCOME_BONUS,
+            status=WalletTransaction.Status.COMPLETED,
+        )
+
+    def test_claim_credits_bonus_once_and_completes(self) -> None:
+        self.assertEqual(self.welcome.investment_amount, Decimal('0'))
+        purchase = self.buy(self.welcome, 'WELCOME_CLAIM_reward1')
+        self.assertEqual(purchase.status, VIPPurchase.Status.COMPLETED)
+        self.assertEqual(purchase.amount_received, self.welcome.target_amount)
+        rows = self._welcome_ledger()
+        self.assertEqual(rows.count(), 1)
+        self.assertEqual(rows.get().balance_type, WalletTransaction.BalanceType.BONUS)
+        self.assertEqual(rows.get().amount, Decimal('10.00000000'))
+        self.refresh()
+        self.assertEqual(self.wallet().bonus_balance, Decimal('10.00000000'))
+        self.assertEqual(self.wallet().total_balance, Decimal('110.00000000'))
+        # No purchase debit and no deposit record were fabricated.
+        self.assertFalse(
+            WalletTransaction.objects.filter(user=self.user, transaction_type=TT.VIP_PURCHASE).exists()
+        )
+
+    def test_replay_is_idempotent_no_double_credit(self) -> None:
+        first = self.buy(self.welcome, 'WELCOME_CLAIM_r1')
+        replay = self.buy(self.welcome, 'WELCOME_CLAIM_r1')
+        self.assertEqual(replay.pk, first.pk)
+        self.assertEqual(self._welcome_ledger().count(), 1)
+        self.refresh()
+        self.assertEqual(self.wallet().bonus_balance, Decimal('10.00000000'))
+
+    def test_second_claim_with_new_key_cannot_double_credit(self) -> None:
+        self.buy(self.welcome, 'WELCOME_CLAIM_k1')
+        with self.assertRaises(VIPError):
+            self.buy(self.welcome, 'WELCOME_CLAIM_k2')
+        self.assertEqual(self._welcome_ledger().count(), 1)
+        self.refresh()
+        self.assertEqual(self.wallet().bonus_balance, Decimal('10.00000000'))
+
+    def test_summary_always_sufficient_for_welcome(self) -> None:
+        Wallet.objects.filter(user=self.user).update(
+            deposit_balance=Decimal('0'), withdrawable_balance=Decimal('0'), total_balance=Decimal('0')
+        )
+        summary = plan_purchase_summary(self.user, self.welcome)
+        self.assertTrue(summary['sufficient'])
+        self.assertEqual(summary['balance_after_purchase'], Decimal('0'))

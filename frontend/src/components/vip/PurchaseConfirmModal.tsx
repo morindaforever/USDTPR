@@ -69,22 +69,29 @@ export function PurchaseConfirmModal({
               <dt className="text-surface-500">Investment</dt>
               <dd className="font-semibold tabular-nums text-surface-900">
                 {Number(plan.investment_amount) === 0
-                  ? 'Free'
+                  ? 'Free — 0 USDT'
                   : `${formatUsdt(plan.investment_amount)} USDT`}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-surface-500">Target</dt>
+              <dt className="text-surface-500">{Number(plan.investment_amount) === 0 ? 'Welcome Reward' : 'Target'}</dt>
               <dd className="font-semibold tabular-nums text-surface-900">
                 {formatUsdt(plan.target_amount)} USDT
               </dd>
             </div>
-            <div className="flex items-center justify-between">
-              <dt className="text-surface-500">Daily rate</dt>
-              <dd className="font-semibold tabular-nums text-brand-700">
-                {plan.daily_rate_percent}%
-              </dd>
-            </div>
+            {Number(plan.investment_amount) === 0 ? (
+              <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+                Promotional welcome reward — credited once to your bonus balance when
+                claimed. Not investment profit. Does not unlock withdrawals.
+              </p>
+            ) : (
+              <div className="flex items-center justify-between">
+                <dt className="text-surface-500">Daily rate</dt>
+                <dd className="font-semibold tabular-nums text-brand-700">
+                  {plan.daily_rate_percent}%
+                </dd>
+              </div>
+            )}
             <div className="my-2 border-t border-surface-200" />
             <div className="flex items-center justify-between">
               <dt className="text-surface-500">Available (deposit + withdrawable)</dt>
@@ -126,12 +133,21 @@ export function PurchaseConfirmModal({
             disabled={isPurchasing || isLoading || !summary?.sufficient}
             className="flex-1 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 active:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isPurchasing ? 'Processing…' : 'Confirm Purchase'}
+            {isPurchasing
+              ? 'Processing…'
+              : Number(plan?.investment_amount) === 0
+                ? 'Claim Welcome Reward'
+                : 'Confirm Purchase'}
           </button>
         </div>
         {!isLoading && summary && !summary.sufficient && (
           <p className="mt-2 text-center text-xs text-surface-500">
             Insufficient combined balance (deposit + withdrawable) for this plan.
+          </p>
+        )}
+        {!isLoading && summary && Number(plan?.investment_amount) === 0 && (
+          <p className="mt-2 text-center text-xs text-surface-500">
+            No wallet balance is required — nothing is spent when claiming.
           </p>
         )}
       </div>

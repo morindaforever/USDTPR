@@ -80,6 +80,28 @@ def _idempotency_key(withdrawal: Withdrawal, action: str) -> str:
     return f'WDR_{withdrawal.withdrawal_id}_{action}'
 
 
+def has_qualifying_vip(user: User) -> bool:
+    """True when the user has purchased a PAID VIP plan (VIP 1 or higher).
+
+    The decision uses the RELATED VIPPlan record — not the snapshot name:
+    a purchase qualifies only when its plan is numbered VIP 1 or higher
+    (``vip_plan.plan_number >= 1``) and the snapshot investment is
+    positive. The zero-investment WELCOME plan (plan_number 0) never
+    qualifies, and CANCELLED purchases never unlock withdrawals.
+    """
+    from apps.vip.models import VIPPurchase
+
+    return (
+        VIPPurchase.objects.filter(
+            user=user,
+            investment_amount__gt=0,
+            vip_plan__plan_number__gte=1,
+        )
+        .exclude(status=VIPPurchase.Status.CANCELLED)
+        .exists()
+    )
+
+
 _AUDIT_ACTIONS = {
     'created': AuditLog.Action.CREATE,
     'status-approved': AuditLog.Action.APPROVE,
@@ -172,6 +194,19 @@ def create_withdrawal(
 
     if user.account_status != User.AccountStatus.ACTIVE or not user.is_active:
         raise WithdrawalError('Your account cannot request withdrawals.')
+
+    # Withdrawal eligibility (server-side, from real purchase records): the
+    # user must have purchased a paid VIP plan (VIP 1 or higher). The
+    # zero-investment WELCOME plan does not qualify. This runs before any
+    # balance/lock work, so an ineligible request creates nothing.
+    if not has_qualifying_vip(user):
+        raise WithdrawalError(
+            'You must purchase at least VIP 1 before submitting a withdrawal request.',
+            errors={'vip_plan': [
+                'You must purchase at least VIP 1 before submitting a withdrawal request. '
+                'The Welcome Plan does not qualify for withdrawal eligibility.'
+            ]},
+        )
 
     # Conversion §17: identity-verification gate when the operator enables
     # KYC enforcement. No-op (record-keeper) while the flag is off.

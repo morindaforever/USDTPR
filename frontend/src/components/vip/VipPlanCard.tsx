@@ -12,7 +12,7 @@ export interface VipPlanCardProps {
 
 /** One VIP plan card: investment, target, daily rate, and entry point. */
 export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCardProps) {
-  const isWelcome = plan.plan_number === 0;
+  const isWelcome = plan.is_welcome_plan ?? plan.plan_number === 0;
   const investsNothing = Number(plan.investment_amount) === 0;
 
   return (
@@ -43,19 +43,26 @@ export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCard
         <div className="flex items-center justify-between">
           <dt className="text-surface-500">Investment</dt>
           <dd className="font-semibold tabular-nums text-surface-900">
-            {investsNothing ? 'Free' : `${formatUsdt(plan.investment_amount)} USDT`}
+            {investsNothing ? 'Free — 0 USDT' : `${formatUsdt(plan.investment_amount)} USDT`}
           </dd>
         </div>
         <div className="flex items-center justify-between">
-          <dt className="text-surface-500">Target</dt>
+          <dt className="text-surface-500">{isWelcome ? 'Welcome Reward' : 'Target'}</dt>
           <dd className="font-semibold tabular-nums text-surface-900">
             {formatUsdt(plan.target_amount)} USDT
           </dd>
         </div>
-        <div className="flex items-center justify-between">
-          <dt className="text-surface-500">Daily rate</dt>
-          <dd className="font-semibold tabular-nums text-brand-700">{plan.daily_rate_percent}%</dd>
-        </div>
+        {isWelcome ? (
+          <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+            Promotional reward — credited once when claimed. Not investment profit.
+            Does not unlock withdrawals.
+          </p>
+        ) : (
+          <div className="flex items-center justify-between">
+            <dt className="text-surface-500">Daily rate</dt>
+            <dd className="font-semibold tabular-nums text-brand-700">{plan.daily_rate_percent}%</dd>
+          </div>
+        )}
       </dl>
 
       <div className="mt-5 flex-1" />
@@ -69,7 +76,7 @@ export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCard
             : 'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800'
         }`}
       >
-        {alreadyHeld ? 'Claimed' : isWelcome ? 'Claim Free Plan' : 'Purchase'}
+        {alreadyHeld ? 'Claimed' : isWelcome ? 'Claim Welcome Reward' : 'Purchase'}
       </button>
     </div>
   );

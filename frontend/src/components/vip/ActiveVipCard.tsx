@@ -17,6 +17,7 @@ const STATUS_TONES: Record<VipPurchase['status'], string> = {
 export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
   const isCompleted = purchase.status === 'COMPLETED';
   const hasProgress = purchase.progress_percent !== undefined;
+  const isWelcome = purchase.investment_amount === '0.00000000';
 
   return (
     <div className="rounded-2xl border border-brand-200 bg-white p-5">
@@ -24,9 +25,10 @@ export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
         <div>
           <h3 className="text-base font-semibold text-surface-900">{purchase.plan_name}</h3>
           <p className="mt-0.5 text-xs text-surface-500">
-            {purchase.investment_amount === '0.00000000'
-              ? 'Free plan'
-              : `${formatUsdt(purchase.investment_amount)} USDT investment`}{' '}
+            {isWelcome
+              ? `Promotional — welcome reward ${formatUsdt(purchase.target_amount)} USDT (not investment profit)`
+              : `${formatUsdt(purchase.investment_amount)} USDT investment`}
+            {' '}
             → {formatUsdt(purchase.target_amount)} USDT target
           </p>
         </div>
@@ -68,7 +70,7 @@ export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
             rewarded={purchase.rewarded_amount ?? '0'}
             target={purchase.target_amount}
             percent={purchase.progress_percent ?? '0'}
-            label={isCompleted ? 'Total rewarded' : 'Progress'}
+            label={isCompleted ? (isWelcome ? 'Welcome reward credited' : 'Total rewarded') : 'Progress'}
           />
           {!isCompleted && purchase.next_reward_cycle && (
             <p className="mt-2 text-[11px] leading-relaxed text-surface-500">

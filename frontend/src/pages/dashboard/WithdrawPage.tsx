@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowUpFromLine, Info, Lock } from 'lucide-react';
+import { ArrowLeft, ArrowUpFromLine, Crown, Info, Lock } from 'lucide-react';
 
 import { Alert, PageContainer } from '@/components';
 import {
@@ -162,6 +162,11 @@ export function WithdrawPage() {
   const loadingAny = networksQuery.isLoading || summaryQuery.isLoading;
   const minimumAmount = quote?.minimum_amount ?? rulesQuery.data?.minimum_amount ?? null;
 
+  // Server-computed eligibility: a paid VIP plan (VIP 1+) is required to
+  // withdraw; the Welcome Plan does not qualify. The frontend notice is a
+  // convenience — the backend enforces the same rule on submission.
+  const withdrawAllowed = summary ? summary.can_withdraw !== false : null;
+
   return (
     <PageContainer
       title="Withdraw"
@@ -234,12 +239,30 @@ export function WithdrawPage() {
           </Alert>
         )}
 
-        {/* Withdrawal request form */}
+        {/* Withdrawal request form (hidden while ineligible) */}
         <section aria-labelledby="request-heading" className="rounded-2xl border border-surface-200 bg-white p-5">
           <h2 id="request-heading" className="mb-4 text-sm font-semibold text-surface-900">
             New Withdrawal Request
           </h2>
-          {loadingAny ? (
+          {withdrawAllowed === false ? (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+              <p className="text-sm font-semibold text-amber-900">Withdrawal unavailable</p>
+              <p className="mt-1 text-sm leading-relaxed text-amber-800">
+                You must purchase at least VIP 1 to submit a withdrawal request.
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-amber-800">
+                The Welcome Plan does not qualify for withdrawal eligibility.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/vip')}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
+              >
+                <Crown className="h-4 w-4" aria-hidden />
+                View VIP Plans
+              </button>
+            </div>
+          ) : loadingAny ? (
             <div className="space-y-4">
               <Skeleton className="h-24 w-full" />
               <Skeleton className="h-20 w-full" />

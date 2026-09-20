@@ -45,9 +45,11 @@ from apps.accounts.models import User
 from apps.core.models import AuditLog
 from apps.notifications.models import Notification
 from apps.notifications.services import notify_event
+from apps.wallet.models import WalletTransaction
 from apps.wallet.services import (
     InsufficientBalanceError,
     WalletError,
+    credit,
     debit_across,
     get_wallet_summary,
 )
@@ -87,12 +89,44 @@ def _get_active_plan(plan_id) -> VIPPlan:
 
 def _check_welcome_claim(user: User, plan: VIPPlan) -> None:
     """At most one WELCOME-plan purchase per user, ever (any status)."""
-    if plan.name.upper().startswith('WELCOME'):
+    if plan.is_welcome_plan:
         if VIPPurchase.objects.filter(user=user, vip_plan=plan).exists():
             raise VIPError(
                 'The Welcome plan has already been claimed on this account.',
                 {'plan_id': ['Welcome plan can only be claimed once.']},
             )
+
+
+def _welcome_reward_key(purchase: VIPPurchase) -> str:
+    """Deterministic ledger key: one welcome reward per purchase, ever."""
+    return f'WELCOME_BONUS_{purchase.purchase_id}'
+
+
+def _credit_welcome_reward(purchase: VIPPurchase) -> None:
+    """Credit a zero-investment WELCOME plan's promotional reward.
+
+    Uses the EXISTING wallet ledger mechanism — the BONUS bucket with the
+    WELCOME_BONUS transaction type — never a fake deposit or a blockchain
+    transaction. The amount is the plan's target/reward amount, taken from
+    the immutable purchase snapshot. Idempotent by construction: the
+    wallet-service credit keyed per purchase can only ever land once, so
+    repeated or concurrent claims cannot double-credit.
+    """
+    reward = purchase.target_amount.quantize(Decimal('0.00000001'))
+    if reward <= 0:
+        return
+    credit(
+        user=purchase.user,
+        amount=reward,
+        balance_type=WalletTransaction.BalanceType.BONUS,
+        transaction_type=WalletTransaction.TransactionType.WELCOME_BONUS,
+        reference_type='vip_purchase',
+        reference_id=purchase.purchase_id,
+        description=(
+            f'Welcome reward (promotional) — {purchase.plan_name_snapshot}'
+        ),
+        idempotency_key=_welcome_reward_key(purchase),
+    )
 
 
 @dataclass
@@ -110,7 +144,6 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
     """
     _validate_account(user)
     plan = _get_active_plan(plan_id)
-    _check_welcome_claim(user, plan)
 
     key = (idempotency_key or '').strip()
     if not key:
@@ -124,10 +157,15 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
             {'idempotency_key': ['Maximum length is 100 characters.']},
         )
 
-    # Idempotent replay: return the existing purchase if this key was used.
+    # Idempotent replay FIRST: return the existing purchase if this key was
+    # used. This must precede the welcome-claim guard — a retried welcome
+    # claim is a replay, not a second claim.
     existing = VIPPurchase.objects.filter(user=user, idempotency_key=key).first()
     if existing is not None:
         return PurchaseResult(purchase=existing, already_existed=True)
+
+    # Welcome-claim guard (at most one WELCOME purchase per user, ever).
+    _check_welcome_claim(user, plan)
 
     # Wallet ledger keys are globally unique, so derive a per-user key.
     wallet_key = f'VIP_PURCHASE_{user.pk}_{key}'
@@ -181,26 +219,54 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
         except WalletError as exc:
             # Any other wallet failure → roll back purchase too.
             raise VIPError('Unable to complete the purchase. Please try again.') from exc
+        purchase.status = VIPPurchase.Status.ACTIVE
+    else:
+        # Promotional welcome reward: credit the plan's reward amount to the
+        # BONUS bucket through the existing ledger service. No deposit record,
+        # no blockchain transaction — an honest promotional credit. Safe on
+        # replays too: the wallet-service idempotency key is per purchase.
+        _credit_welcome_reward(purchase)
+        # A zero-investment welcome plan grants its full reward at claim time
+        # and accrues nothing daily, so the purchase is complete immediately.
+        purchase.amount_received = purchase.target_amount
+        purchase.status = VIPPurchase.Status.COMPLETED
+        purchase.completed_at = timezone.now()
 
-    purchase.status = VIPPurchase.Status.ACTIVE
     purchase.started_at = timezone.now()
-    purchase.save(update_fields=['status', 'started_at', 'updated_at'])
+    purchase.save(update_fields=['status', 'started_at', 'completed_at', 'amount_received', 'updated_at'])
+
+    if purchase.investment_amount > 0:
+        audit_description = (
+            f'Purchased {purchase.plan_name_snapshot} for {purchase.investment_amount} USDT '
+            f'(investment), target {purchase.target_amount} USDT.'
+        )
+        notification_message = (
+            f'{purchase.plan_name_snapshot} has been activated successfully.'
+        )
+    else:
+        audit_description = (
+            f'Claimed {purchase.plan_name_snapshot} (promotional): no investment, '
+            f'welcome reward {purchase.target_amount.quantize(Decimal("0.01"))} USDT '
+            f'credited to the bonus balance.'
+        )
+        notification_message = (
+            f'{purchase.plan_name_snapshot} activated — your welcome reward of '
+            f'{purchase.target_amount.quantize(Decimal("0.01"))} USDT (promotional) '
+            f'has been credited to your bonus balance.'
+        )
 
     AuditLog.objects.create(
         actor_user=user,
         action=AuditLog.Action.CREATE,
         target_type='vip_purchase',
         target_id=purchase.purchase_id,
-        description=(
-            f'Purchased {purchase.plan_name_snapshot} for {purchase.investment_amount} USDT '
-            f'(investment), target {purchase.target_amount} USDT.'
-        ),
+        description=audit_description,
     )
     notify_event(
         user=user,
         notification_type=Notification.NotificationType.VIP,
         title='VIP Plan Activated',
-        message=f'{purchase.plan_name_snapshot} has been activated successfully.',
+        message=notification_message,
         event_key=f'vip_purchase:{purchase.purchase_id}:activated',
         related_type='vip_purchase',
         related_id=purchase.purchase_id,
@@ -213,12 +279,19 @@ def plan_purchase_summary(user: User, plan: VIPPlan) -> dict:
 
     ``available_balance`` is the combined spendable balance (deposit +
     withdrawable — the same buckets ``purchase_plan`` debits), so the modal
-    can never contradict what the purchase would actually accept.
+    can never contradict what the purchase would actually accept. A
+    zero-investment WELCOME plan is always affordable (nothing is spent).
     """
     summary = get_wallet_summary(user)
     available = (
         summary['deposit_balance'] + summary['withdrawable_balance']
     ).quantize(Decimal('0.00000001'))
+    if plan.is_welcome_plan:
+        return {
+            'available_balance': available,
+            'balance_after_purchase': available,
+            'sufficient': True,
+        }
     return {
         'available_balance': available,
         'balance_after_purchase': (available - plan.investment_amount).quantize(Decimal('0.00000001')),

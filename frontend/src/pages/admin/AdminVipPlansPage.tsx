@@ -166,6 +166,7 @@ export function AdminVipPlansPage() {
             label="Plan name"
             value={form.name}
             maxLength={100}
+            hint="Plans named WELCOME… may set investment 0 (free welcome plan)."
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           />
           <div className="grid grid-cols-2 gap-3">
@@ -185,20 +186,22 @@ export function AdminVipPlansPage() {
               label="Investment amount (USDT)"
               value={form.investment_amount}
               inputMode="decimal"
+              hint="0 allowed only for a WELCOME plan."
               onChange={(e) => setForm((f) => ({ ...f, investment_amount: e.target.value }))}
             />
             <Input
               label="Target amount (USDT)"
               value={form.target_amount}
               inputMode="decimal"
+              hint="For a WELCOME plan this is the one-time welcome reward."
               onChange={(e) => setForm((f) => ({ ...f, target_amount: e.target.value }))}
             />
           </div>
           <Input
-            label="Daily rate (%)"
+            label="Daily rate (fraction)"
             value={form.daily_rate}
             inputMode="decimal"
-            hint="Applies only to new purchases."
+            hint="Fraction of investment per day (0.25 = 25%). Applies only to new purchases."
             onChange={(e) => setForm((f) => ({ ...f, daily_rate: e.target.value }))}
           />
           <label className="flex items-center gap-2 text-sm text-surface-200">

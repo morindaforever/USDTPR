@@ -72,6 +72,25 @@ def _fund(user: User, amount: str, bucket=WalletTransaction.BalanceType.WITHDRAW
     )
 
 
+def _grant_paid_vip(user: User, suffix: str) -> None:
+    """Fixture: paid-VIP purchase row (unlocks withdrawals, moves no money)."""
+    from apps.vip.models import VIPPlan, VIPPurchase
+
+    plan, _ = VIPPlan.objects.get_or_create(
+        name='VIP 1',
+        defaults={
+            'plan_number': 1, 'investment_amount': Decimal('10'),
+            'target_amount': Decimal('15'), 'daily_rate': Decimal('0.25'),
+        },
+    )
+    VIPPurchase.objects.create(
+        user=user, vip_plan=plan, plan_name_snapshot=plan.name,
+        investment_amount=plan.investment_amount, target_amount=plan.target_amount,
+        daily_rate_snapshot=plan.daily_rate, status=VIPPurchase.Status.ACTIVE,
+        idempotency_key=f'TEST_PAID_VIP_s14_{suffix}_{user.user_id}',
+    )
+
+
 class Section14Base(TestCase):
     """Shared fixtures: demo networks/plans + two users + one superuser."""
 
@@ -214,6 +233,7 @@ class IdorMatrixTests(Section14Base):
 
     def test_b_cannot_read_a_withdrawal(self) -> None:
         _fund(self.a, '100')
+        _grant_paid_vip(self.a, 'idor-wd')
         self._auth(self.a)
         created = self.client.post(
             '/api/withdrawals/',
@@ -313,6 +333,7 @@ class AdminAuthorizationTests(Section14Base):
 
     def test_regular_user_cannot_change_admin_withdrawal_state(self) -> None:
         _fund(self.a, '100')
+        _grant_paid_vip(self.a, 'adm-wd')
         self._auth(self.a)
         created = self.client.post(
             '/api/withdrawals/',
@@ -450,6 +471,7 @@ class FinancialIntegrityTests(Section14Base):
         )
 
         _fund(self.a, '100')
+        _grant_paid_vip(self.a, 'locked-lifecycle')
         w1, _ = create_withdrawal(
             user=self.a, network_code='TRX', destination_address=TRON_ADDRESS,
             amount=Decimal('20.00'), idempotency_key='inv-wd-1',
@@ -498,6 +520,7 @@ class FinancialIntegrityTests(Section14Base):
         )
 
         _fund(self.a, '100')
+        _grant_paid_vip(self.a, 'hash-lifecycle')
         withdrawal, _ = create_withdrawal(
             user=self.a, network_code='TRX', destination_address=TRON_ADDRESS,
             amount=Decimal('20.00'), idempotency_key='hash-wd',

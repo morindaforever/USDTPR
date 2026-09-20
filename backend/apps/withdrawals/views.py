@@ -130,6 +130,9 @@ class WithdrawalSummaryView(_AuthedAPIView):
             'withdrawable_balance': str(summary['withdrawable_balance'].quantize(Decimal('0.01'))),
             'locked_balance': str(summary['locked_balance'].quantize(Decimal('0.01'))),
             'pending_withdrawals': str(services.pending_withdrawal_total(request.user)),
+            # Withdrawal eligibility (Section: VIP-gating) — computed from
+            # real purchase records server-side; the frontend only renders it.
+            'can_withdraw': services.has_qualifying_vip(request.user),
         })
 
 
