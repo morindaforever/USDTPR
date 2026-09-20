@@ -89,10 +89,14 @@ class AdminVIPPlanSerializer(serializers.ModelSerializer):
     plan NAME (WELCOME prefix) — no extra flag field, no migration.
     """
 
+    # Precision MUST match the model's money_field() columns (Decimal 24, 8):
+    # the list API serves 8-dp strings ('0.00000000') and the admin form
+    # round-trips them verbatim, so a 2-dp validator would reject the row's
+    # own stored values on every edit (max_decimal_places 400).
     investment_amount = serializers.DecimalField(
-        max_digits=18, decimal_places=2, min_value=Decimal('0'),
+        max_digits=24, decimal_places=8, min_value=Decimal('0'),
     )
-    target_amount = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=Decimal('0.01'))
+    target_amount = serializers.DecimalField(max_digits=24, decimal_places=8, min_value=Decimal('0.01'))
     daily_rate = serializers.DecimalField(max_digits=5, decimal_places=4, min_value=Decimal('0.0001'), max_value=Decimal('1.0000'))
 
     class Meta:

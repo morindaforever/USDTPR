@@ -27,6 +27,17 @@ const EMPTY_FORM: PlanForm = {
 };
 
 /**
+ * Daily-rate percent UX: admins type 25 (= 25%) while the API stores the
+ * fraction 0.25 (model Decimal(5,4)). Editing loads the stored fraction and
+ * shows the percent (0.2500 → 25); saving divides back (25 → 0.25).
+ * toFixed(2) keeps the conversion exact — a 4-dp fraction always yields a
+ * clean ≤2-dp percent.
+ */
+const rateFromPercent = (percent: string): string => String(Number(percent) / 100);
+const percentFromRate = (rate: string): string =>
+  (Number(rate) * 100).toFixed(2).replace(/\.?0+$/, '');
+
+/**
  * VIP plan management (§30–33): CRUD on plans while every historical
  * purchase keeps its snapshot terms (the backend never rewrites purchases).
  * All financial fields are Decimals validated server-side (§31–32).
@@ -59,7 +70,7 @@ export function AdminVipPlansPage() {
       plan_number: String(plan.plan_number),
       investment_amount: plan.investment_amount,
       target_amount: plan.target_amount,
-      daily_rate: plan.daily_rate,
+      daily_rate: percentFromRate(plan.daily_rate),
       sort_order: String(plan.sort_order),
       is_active: plan.is_active,
     });
@@ -76,7 +87,7 @@ export function AdminVipPlansPage() {
         plan_number: form.plan_number.trim(),
         investment_amount: form.investment_amount.trim(),
         target_amount: form.target_amount.trim(),
-        daily_rate: form.daily_rate.trim(),
+        daily_rate: rateFromPercent(form.daily_rate.trim()),
         sort_order: form.sort_order.trim(),
         is_active: form.is_active,
       };
@@ -112,7 +123,7 @@ export function AdminVipPlansPage() {
     { key: 'plan', header: 'Plan', render: (row: AdminVipPlan) => <span className="font-semibold text-white">{row.name}</span> },
     { key: 'inv', header: 'Investment', render: (row: AdminVipPlan) => <span className="tabular-nums">{formatUsdt(row.investment_amount)}</span> },
     { key: 'target', header: 'Target', render: (row: AdminVipPlan) => <span className="tabular-nums">{formatUsdt(row.target_amount)}</span> },
-    { key: 'rate', header: 'Daily rate', render: (row: AdminVipPlan) => <span className="tabular-nums">{row.daily_rate}%</span> },
+    { key: 'rate', header: 'Daily rate', render: (row: AdminVipPlan) => <span className="tabular-nums">{percentFromRate(row.daily_rate)}%</span> },
     { key: 'active', header: 'Status', render: (row: AdminVipPlan) => (
       <AdminStatusBadge status={row.is_active ? 'ACTIVE' : 'CLOSED'} />
     ) },
@@ -198,10 +209,10 @@ export function AdminVipPlansPage() {
             />
           </div>
           <Input
-            label="Daily rate (fraction)"
+            label="Daily rate (% per day)"
             value={form.daily_rate}
             inputMode="decimal"
-            hint="Fraction of investment per day (0.25 = 25%). Applies only to new purchases."
+            hint="Percent of investment per day (25 = 25%). Applies only to new purchases."
             onChange={(e) => setForm((f) => ({ ...f, daily_rate: e.target.value }))}
           />
           <label className="flex items-center gap-2 text-sm text-surface-200">

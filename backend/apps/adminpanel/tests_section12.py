@@ -433,6 +433,62 @@ class AdminVIPTests(APITestCase):
         }, format='json')
         self.assertEqual(response.status_code, 400)
 
+    def test_welcome_plan_edit_round_trips_8dp_values(self):
+        """Regression: the admin form PATCHes back the list API's 8-dp strings.
+
+        The write serializer previously declared decimal_places=2 while the
+        money columns are Decimal(24, 8), so editing the WELCOME plan (whose
+        form is prefilled with 0.00000000 / 10.00000000) failed with
+        'Ensure that there are no more than 2 decimal places.'
+        """
+        plan = VIPPlan.objects.create(
+            name='WELCOME PLAN', plan_number=54, investment_amount=Decimal('0'),
+            target_amount=Decimal('10'), daily_rate=Decimal('0.25'),
+        )
+        # Exact payload AdminVipPlansPage sends when editing: the values the
+        # list endpoint returned (8 dp) plus the percent → fraction rate.
+        response = self.client.patch(f'/api/admin/vip-plans/{plan.pk}/', {
+            'name': 'WELCOME PLAN', 'plan_number': '0',
+            'investment_amount': '0.00000000', 'target_amount': '10.00000000',
+            'daily_rate': '0.25', 'sort_order': '0', 'is_active': True,
+        }, format='json')
+        self.assertEqual(response.status_code, 200, response.json())
+        plan.refresh_from_db()
+        self.assertEqual(plan.investment_amount, Decimal('0E-8'))
+        self.assertEqual(plan.target_amount, Decimal('10.00000000'))
+        self.assertEqual(plan.daily_rate, Decimal('0.2500'))
+        self.assertTrue(plan.is_active)
+
+    def test_paid_plan_edit_round_trips_8dp_values(self):
+        """Paid plans suffer the same round-trip — 8-dp edit must succeed."""
+        plan = VIPPlan.objects.create(
+            name='VIP ROUNDTRIP', plan_number=55, investment_amount=Decimal('10'),
+            target_amount=Decimal('15'), daily_rate=Decimal('0.25'),
+        )
+        response = self.client.patch(f'/api/admin/vip-plans/{plan.pk}/', {
+            'name': 'VIP ROUNDTRIP', 'plan_number': '1',
+            'investment_amount': '10.00000000', 'target_amount': '15.00000000',
+            'daily_rate': '0.25', 'is_active': True,
+        }, format='json')
+        self.assertEqual(response.status_code, 200, response.json())
+
+    def test_paid_plan_zero_investment_8dp_still_rejected(self):
+        """The precision fix must not loosen the paid-plan zero rejection."""
+        response = self.client.post('/api/admin/vip-plans/', {
+            'name': 'Freebie 8dp', 'plan_number': 56, 'investment_amount': '0.00000000',
+            'target_amount': '10.00000000', 'daily_rate': '0.25',
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('investment_amount', response.json().get('errors', {}))
+
+    def test_welcome_target_10_succeeds(self):
+        """WELCOME with investment 0 and target 10 satisfies target > investment."""
+        response = self.client.post('/api/admin/vip-plans/', {
+            'name': 'WELCOME PLAN2', 'plan_number': 57, 'investment_amount': '0.00000000',
+            'target_amount': '10.00000000', 'daily_rate': '0.25', 'is_active': True,
+        }, format='json')
+        self.assertEqual(response.status_code, 201, response.json())
+
     def test_plan_edit_preserves_purchase_snapshot(self):
         plan = VIPPlan.objects.create(
             name='VIP 1', plan_number=1, investment_amount=Decimal('10'),
