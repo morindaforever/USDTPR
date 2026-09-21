@@ -26,7 +26,7 @@ export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
           <h3 className="text-base font-semibold text-surface-900">{purchase.plan_name}</h3>
           <p className="mt-0.5 text-xs text-surface-500">
             {isWelcome
-              ? `Promotional — welcome reward ${formatUsdt(purchase.target_amount)} USDT (not investment profit)`
+              ? `Promotional — welcome reward target ${formatUsdt(purchase.target_amount)} USDT (not investment profit)`
               : `${formatUsdt(purchase.investment_amount)} USDT investment`}
             {' '}
             → {formatUsdt(purchase.target_amount)} USDT target
@@ -42,10 +42,22 @@ export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div className="rounded-xl bg-surface-50 p-3">
           <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
-            Daily rate
+            Daily Return
           </dt>
           <dd className="mt-0.5 font-semibold tabular-nums text-surface-900">
             {purchase.daily_rate_percent}%
+          </dd>
+        </div>
+        <div className="rounded-xl bg-surface-50 p-3">
+          <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
+            Daily Reward
+          </dt>
+          <dd className="mt-0.5 font-semibold tabular-nums text-brand-700">
+            {formatUsdt(
+              purchase.daily_reward_amount ??
+                (Number(purchase.target_amount) * Number(purchase.daily_rate)).toFixed(2),
+            )}{' '}
+            USDT
           </dd>
         </div>
         <div className="rounded-xl bg-surface-50 p-3">
@@ -70,7 +82,7 @@ export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
             rewarded={purchase.rewarded_amount ?? '0'}
             target={purchase.target_amount}
             percent={purchase.progress_percent ?? '0'}
-            label={isCompleted ? (isWelcome ? 'Welcome reward credited' : 'Total rewarded') : 'Progress'}
+            label={isCompleted ? 'Reward target reached' : 'Progress'}
           />
           {!isCompleted && purchase.next_reward_cycle && (
             <p className="mt-2 text-[11px] leading-relaxed text-surface-500">

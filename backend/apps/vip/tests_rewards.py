@@ -8,7 +8,7 @@ authorization, and three-way accounting invariants
 """
 
 from datetime import timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from threading import Barrier
 from unittest import mock
 
@@ -70,26 +70,38 @@ class RewardTestBase(TestCase):
 class CalculationTests(RewardTestBase):
     """§4/§5/§51 — investment × rate per plan, Decimal-exact."""
 
-    def _purchase(self, plan: VIPPlan, user=None, amount=None) -> VIPPurchase:
-        target = Decimal(amount) if amount else None
+    def _purchase(self, plan: VIPPlan, user=None, amount=None, target=None) -> VIPPurchase:
+        invest = Decimal(amount) if amount else None
         p = VIPPurchase(
             user=user or self.user,
             vip_plan=plan,
             plan_name_snapshot=plan.name,
-            investment_amount=target if target is not None else plan.investment_amount,
-            target_amount=plan.target_amount,
+            investment_amount=invest if invest is not None else plan.investment_amount,
+            target_amount=Decimal(target) if target else plan.target_amount,
             daily_rate_snapshot=plan.daily_rate,
             status=VIPPurchase.Status.ACTIVE,
         )
         p.save()
         return p
 
-    def test_vip1_daily_is_2_50(self) -> None:
+    def test_vip1_daily_is_target_times_rate(self) -> None:
+        """VIP 1: target 15 × 25% = 3.75/day — a percentage of TARGET, not investment."""
         p = self._purchase(self.plan1)
-        self.assertEqual(calculate_daily_reward(p), Decimal('2.50000000'))
+        self.assertEqual(calculate_daily_reward(p), Decimal('3.75000000'))
 
-    def test_vip2_daily_is_5_00(self) -> None:
+    def test_vip2_daily_is_target_times_rate(self) -> None:
+        """VIP 2: target 30 × 25% = 7.50/day."""
         p = self._purchase(self.plan2)
+        self.assertEqual(calculate_daily_reward(p), Decimal('7.50000000'))
+
+    def test_daily_uses_target_not_investment(self) -> None:
+        """Issue 1 regression guard: investment ≠ target → rate applies to target.
+
+        Investment 10, target 50, rate 10% → daily 5 (NOT 10 × 10% = 1).
+        """
+        p = self._purchase(self.plan1, target='50')
+        VIPPurchase.objects.filter(pk=p.pk).update(daily_rate_snapshot=Decimal('0.1000'))
+        p.refresh_from_db()
         self.assertEqual(calculate_daily_reward(p), Decimal('5.00000000'))
 
     def test_snapshot_not_plan_terms(self) -> None:
@@ -97,12 +109,14 @@ class CalculationTests(RewardTestBase):
         p = self._purchase(self.plan1)
         VIPPlan.objects.filter(pk=self.plan1.pk).update(daily_rate=Decimal('0.5000'))
         p.refresh_from_db()
-        self.assertEqual(calculate_daily_reward(p), Decimal('2.50000000'))
+        self.assertEqual(calculate_daily_reward(p), Decimal('3.75000000'))
         VIPPlan.objects.filter(pk=self.plan1.pk).update(daily_rate=Decimal('0.2500'))
 
     def test_decimal_precision_never_float(self) -> None:
-        p = self._purchase(self.plan1, amount='1.12345678')
-        expected = (Decimal('1.12345678') * Decimal('0.25')).quantize(D8)
+        p = self._purchase(self.plan1, target='12.34567890')
+        expected = (Decimal('12.34567890') * Decimal('0.25')).quantize(
+            D8, rounding=ROUND_HALF_UP
+        )
         self.assertEqual(calculate_daily_reward(p), expected)
         self.assertIsInstance(calculate_daily_reward(p), Decimal)
 
@@ -157,8 +171,12 @@ class TargetCapTests(RewardTestBase):
         self.assertEqual(outcome.status, 'skipped')
         self.assertFalse(VIPReward.objects.filter(reward_date=self.cycle, vip_purchase=self.purchase).exists())
 
-    def test_zero_reward_cycle_consumed_exactly_once(self) -> None:
-        """Zero-investment (WELCOME) plan: first cycle closes, never re-pays."""
+    def test_welcome_plan_daily_progression_issue9(self) -> None:
+        """Issue 9 — Welcome plan (target 10, 25%): 2.5/day, 4 cycles, then done.
+
+        Activation credits nothing; the plan runs the normal daily lifecycle
+        and completes exactly at target.
+        """
         welcome = VIPPlan.objects.get(plan_number=0)
         p = VIPPurchase.objects.create(
             user=self.user,
@@ -167,6 +185,87 @@ class TargetCapTests(RewardTestBase):
             investment_amount=Decimal('0.00000000'),
             target_amount=Decimal('10.00000000'),
             daily_rate_snapshot=Decimal('0.2500'),
+            status=VIPPurchase.Status.ACTIVE,
+        )
+        before = self.wallet().withdrawable_balance
+        rewarded = Decimal('0')
+        for day in range(1, 6):
+            outcome = process_reward(p.id, self.cycle + timedelta(days=day))
+            p.refresh_from_db()
+            if day <= 4:
+                self.assertIn(outcome.status, ('credited', 'completed_purchase'), day)
+                self.assertEqual(outcome.credited_amount, Decimal('2.50000000'))
+                rewarded += Decimal('2.50000000')
+                self.assertEqual(p.amount_received, rewarded)
+                self.assertEqual(
+                    p.status,
+                    VIPPurchase.Status.COMPLETED if day == 4 else VIPPurchase.Status.ACTIVE,
+                )
+            else:
+                # Day 5: target already reached — nothing more is paid.
+                self.assertEqual(outcome.status, 'skipped', day)
+                self.assertEqual(outcome.reason, 'purchase-status-completed')
+        p.refresh_from_db()
+        self.assertEqual(p.amount_received, Decimal('10.00000000'))
+        self.assertEqual(p.status, VIPPurchase.Status.COMPLETED)
+        self.assertIsNotNone(p.completed_at)
+        self.refresh()
+        self.assertEqual(self.wallet().withdrawable_balance, before + Decimal('10.00000000'))
+        # Exactly four COMPLETED reward rows / ledger entries.
+        self.assertEqual(VIPReward.objects.filter(vip_purchase=p).count(), 4)
+        self.assertEqual(
+            WalletTransaction.objects.filter(
+                user=self.user, transaction_type=TT.VIP_REWARD, status=WalletTransaction.Status.COMPLETED,
+            ).count(),
+            4,
+        )
+
+    def test_welcome_plan_activation_credits_nothing(self) -> None:
+        """Issue 2 — a claimed welcome plan starts at rewarded=0, no bonus bucket."""
+        from apps.vip.services import purchase_plan
+
+        welcome = VIPPlan.objects.get(plan_number=0)
+        before = self.wallet().withdrawable_balance
+        bonus_before = self.wallet().bonus_balance
+        purchase_plan(user=self.user, plan_id=welcome.pk, idempotency_key='WELCOME_CLAIM_issue2')
+        self.refresh()
+        self.assertEqual(self.wallet().withdrawable_balance, before)
+        self.assertEqual(self.wallet().bonus_balance, bonus_before)
+        self.assertFalse(
+            WalletTransaction.objects.filter(
+                user=self.user, transaction_type=TT.WELCOME_BONUS, status=WalletTransaction.Status.COMPLETED,
+            ).exists(),
+        )
+
+    def test_partial_final_reward_uses_remaining_not_full_daily(self) -> None:
+        """Issue 3/§9 — remaining 5 with daily 15 pays exactly 5, not 15."""
+        p = VIPPurchase.objects.create(
+            user=self.user,
+            vip_plan=self.plan1,
+            plan_name_snapshot=self.plan1.name,
+            investment_amount=Decimal('10.00000000'),
+            target_amount=Decimal('50.00000000'),
+            daily_rate_snapshot=Decimal('0.3000'),
+            status=VIPPurchase.Status.ACTIVE,
+        )
+        self._seed_reward(p, '45.00000000')
+        VIPPurchase.objects.filter(pk=p.pk).update(amount_received=Decimal('45.00000000'))
+        outcome = process_reward(p.id, self.cycle)
+        self.assertEqual(outcome.status, 'completed_purchase')
+        self.assertEqual(outcome.credited_amount, Decimal('5.00000000'))
+        p.refresh_from_db()
+        self.assertEqual(p.amount_received, Decimal('50.00000000'))
+        self.assertEqual(p.status, VIPPurchase.Status.COMPLETED)
+
+    def test_zero_reward_cycle_consumed_exactly_once(self) -> None:
+        """A rate of exactly 0 consumes the cycle once and never re-pays."""
+        p = VIPPurchase.objects.create(
+            user=self.user,
+            vip_plan=self.plan1,
+            plan_name_snapshot=self.plan1.name,
+            investment_amount=Decimal('10.00000000'),
+            target_amount=Decimal('15.00000000'),
+            daily_rate_snapshot=Decimal('0.0000'),
             status=VIPPurchase.Status.ACTIVE,
         )
         first = process_reward(p.id, self.cycle)
@@ -178,7 +277,7 @@ class TargetCapTests(RewardTestBase):
         second = process_reward(p.id, self.cycle + timedelta(days=1))
         self.assertEqual(second.status, 'skipped')
         self.assertEqual(second.reason, 'no-credit-due')
-        # A paid plan's consumed cycle behaves the same way.
+        # A target-cap-consumed cycle behaves the same way.
         self._seed_reward(self.purchase, '15.00000000')
         VIPPurchase.objects.filter(pk=self.purchase.pk).update(
             amount_received=Decimal('15.00000000'), last_reward_cycle=self.cycle,
@@ -207,12 +306,12 @@ class ProcessRewardTests(RewardTestBase):
         outcome = process_reward(self.purchase.id, self.cycle)
         self.assertEqual(outcome.status, 'credited')
         self.refresh()
-        self.assertEqual(self.wallet().withdrawable_balance, before + Decimal('2.50000000'))
+        self.assertEqual(self.wallet().withdrawable_balance, before + Decimal('3.75000000'))
         self.purchase.refresh_from_db()
-        self.assertEqual(self.purchase.amount_received, Decimal('2.50000000'))
+        self.assertEqual(self.purchase.amount_received, Decimal('3.75000000'))
         reward = VIPReward.objects.get(vip_purchase=self.purchase, reward_date=self.cycle)
         self.assertEqual(reward.status, VIPReward.Status.COMPLETED)
-        self.assertEqual(reward.credited_amount, Decimal('2.50000000'))
+        self.assertEqual(reward.credited_amount, Decimal('3.75000000'))
         self.assertIsNotNone(reward.processed_at)
         self.assertTrue(Notification.objects.filter(
             user=self.user, notification_type=Notification.NotificationType.REWARD
@@ -237,7 +336,7 @@ class ProcessRewardTests(RewardTestBase):
         process_reward(self.purchase.id, self.cycle)
         process_reward(self.purchase.id, self.cycle)
         self.refresh()
-        self.assertEqual(self.wallet().withdrawable_balance, before + Decimal('2.50000000'))
+        self.assertEqual(self.wallet().withdrawable_balance, before + Decimal('3.75000000'))
         self.assertEqual(VIPReward.objects.filter(vip_purchase=self.purchase).count(), 1)
         self.assertEqual(
             WalletTransaction.objects.filter(
@@ -263,7 +362,7 @@ class ProcessRewardTests(RewardTestBase):
         outcome = process_reward(self.purchase.id, self.cycle)
         self.assertEqual(outcome.status, 'credited')
         self.refresh()
-        self.assertEqual(self.wallet().withdrawable_balance, before + Decimal('2.50000000'))
+        self.assertEqual(self.wallet().withdrawable_balance, before + Decimal('3.75000000'))
         self.assertEqual(
             WalletTransaction.objects.filter(
                 user=self.user, transaction_type=TT.VIP_REWARD, status=WalletTransaction.Status.COMPLETED,
@@ -370,9 +469,9 @@ class AccountingTests(RewardTestBase):
         process_reward(self.purchase.id, self.cycle)
         self.purchase.refresh_from_db()
         progress = get_purchase_progress(self.purchase)
-        self.assertEqual(Decimal(progress['rewarded_amount']), Decimal('5.00000000'))
-        self.assertEqual(Decimal(progress['remaining_amount']), Decimal('25.00000000'))
-        self.assertEqual(Decimal(progress['progress_percent']), Decimal('16.67'))
+        self.assertEqual(Decimal(progress['rewarded_amount']), Decimal('7.50000000'))
+        self.assertEqual(Decimal(progress['remaining_amount']), Decimal('22.50000000'))
+        self.assertEqual(Decimal(progress['progress_percent']), Decimal('25.00'))
         self.assertEqual(progress['next_reward_cycle'], (self.cycle + timedelta(days=1)).isoformat())
 
 
@@ -440,9 +539,9 @@ class RewardApiTests(RewardTestBase):
         res = self.client.get(reverse('vip:active'))
         self.assertEqual(res.status_code, 200)
         row = next(r for r in res.json()['data'] if r['purchase_id'] == self.purchase.purchase_id)
-        self.assertEqual(Decimal(row['rewarded_amount']), Decimal('2.50000000'))
-        self.assertEqual(Decimal(row['remaining_amount']), Decimal('12.50000000'))
-        self.assertEqual(Decimal(row['progress_percent']), Decimal('16.67'))
+        self.assertEqual(Decimal(row['rewarded_amount']), Decimal('3.75000000'))
+        self.assertEqual(Decimal(row['remaining_amount']), Decimal('11.25000000'))
+        self.assertEqual(Decimal(row['progress_percent']), Decimal('25.00'))
 
     def test_no_public_reward_trigger(self) -> None:
         """Users cannot trigger processing; the engine is server-side only."""
@@ -528,7 +627,7 @@ class RewardConcurrencyTests(RewardConcurrencyBase):
         )
         self.assertEqual(VIPReward.objects.filter(vip_purchase=self.purchase).count(), 1)
         wallet = Wallet.objects.get(user=self.user)
-        self.assertEqual(wallet.withdrawable_balance, Decimal('2.50000000'))
+        self.assertEqual(wallet.withdrawable_balance, Decimal('3.75000000'))
 
     def test_repeated_command_runs_are_idempotent(self) -> None:
         """§53/§55 — full batch twice: wallet credits exactly once."""
@@ -541,4 +640,4 @@ class RewardConcurrencyTests(RewardConcurrencyBase):
             1,
         )
         wallet = Wallet.objects.get(user=self.user)
-        self.assertEqual(wallet.withdrawable_balance, Decimal('2.50000000'))
+        self.assertEqual(wallet.withdrawable_balance, Decimal('3.75000000'))

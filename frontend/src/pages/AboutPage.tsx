@@ -35,11 +35,26 @@ export function AboutPage() {
           <div className="p-5">
             <h2 className="text-sm font-semibold text-surface-900">The short version</h2>
             <p className="mt-2 text-sm leading-relaxed text-surface-600">
-              NexusUSDT is a web platform for managing a USDT-based account:
-              depositing, joining VIP tiers, growing a referral team, and tracking
-              everything from a mobile-first dashboard. It is a development
-              project — features arrive in planned sections, and nothing here is
-              financial advice or a promise of returns.
+              NexusUSDT is a USDT-based digital investment platform where users can
+              access available plans with defined investment amounts, target reward
+              amounts, and configured daily reward rates. You fund a USDT wallet,
+              choose a plan, and track reward progress from your dashboard. Digital
+              assets and investment activities involve risk: returns are not
+              guaranteed, and nothing on this platform is financial advice or a
+              promise of returns.
+            </p>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="p-5">
+            <h2 className="text-sm font-semibold text-amber-900">Risk disclosure</h2>
+            <p className="mt-2 text-sm leading-relaxed text-amber-800">
+              Digital assets and investment activities involve risk. Returns are not
+              guaranteed, and users should review the terms and risks before
+              participating. Past performance of any plan configuration does not
+              indicate future results, and NexusUSDT makes no claim of guaranteed
+              profits, licensing, or regulatory approval.
             </p>
           </div>
         </Card>

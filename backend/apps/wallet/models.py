@@ -82,6 +82,7 @@ class WalletTransaction(TimeStampedModel):
         VIP_PURCHASE = 'VIP_PURCHASE', 'VIP purchase'
         VIP_REWARD = 'VIP_REWARD', 'VIP reward'
         REFERRAL_COMMISSION = 'REFERRAL_COMMISSION', 'Referral commission'
+        REFERRAL_REWARD = 'REFERRAL_REWARD', 'Referral reward'
         WELCOME_BONUS = 'WELCOME_BONUS', 'Welcome bonus'
         REFUND = 'REFUND', 'Refund'
         ADJUSTMENT = 'ADJUSTMENT', 'Adjustment'

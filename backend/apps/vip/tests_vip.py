@@ -335,7 +335,10 @@ class VIPConcurrencyBase(TransactionTestCase):
 class WelcomePlanTests(VIPTestBase):
     def test_first_claim_ok_second_rejected(self) -> None:
         first = self.buy(self.welcome, 'WELCOME_CLAIM_x1')
-        self.assertEqual(first.status, VIPPurchase.Status.COMPLETED)
+        # Issue 2: activation credits nothing — the plan enters the normal
+        # ACTIVE daily-reward lifecycle (rewarded 0 at claim).
+        self.assertEqual(first.status, VIPPurchase.Status.ACTIVE)
+        self.assertEqual(first.amount_received, Decimal('0'))
         with self.assertRaises(VIPError):
             self.buy(self.welcome, 'WELCOME_CLAIM_x2')
         self.assertEqual(VIPPurchase.objects.filter(user=self.user, vip_plan=self.welcome).count(), 1)
@@ -383,7 +386,9 @@ class AccountingInvariantTests(VIPTestBase):
     def test_welcome_claim_is_free_and_guarded(self) -> None:
         """WELCOME invests 0 → no debit, no purchase debit row; second claim blocked."""
         purchase = self.buy(self.welcome, 'WELCOME_CLAIM_free1')
-        self.assertEqual(purchase.status, VIPPurchase.Status.COMPLETED)
+        # Issue 2: activation grants nothing — the plan is ACTIVE at 0%.
+        self.assertEqual(purchase.status, VIPPurchase.Status.ACTIVE)
+        self.assertEqual(purchase.amount_received, Decimal('0'))
         self.refresh()
         self.assertEqual(self.wallet().withdrawable_balance, Decimal('100.00000000'))
         self.assertFalse(
@@ -404,8 +409,9 @@ class AccountingInvariantTests(VIPTestBase):
 
 
 class WelcomeRewardTests(VIPTestBase):
-    """Zero-investment WELCOME plan claims its promotional reward ONCE, via
-    the existing BONUS ledger bucket — no deposit record, no blockchain txn."""
+    """Zero-investment WELCOME plan: activation credits NOTHING; the plan then
+    earns its reward daily (target × rate) via the normal lifecycle (Issue 2).
+    No WELCOME_BONUS row, no deposit record, no blockchain txn — ever."""
 
     def _welcome_ledger(self):
         return WalletTransaction.objects.filter(
@@ -413,38 +419,50 @@ class WelcomeRewardTests(VIPTestBase):
             status=WalletTransaction.Status.COMPLETED,
         )
 
-    def test_claim_credits_bonus_once_and_completes(self) -> None:
+    def test_claim_credits_nothing_and_activates(self) -> None:
         self.assertEqual(self.welcome.investment_amount, Decimal('0'))
         purchase = self.buy(self.welcome, 'WELCOME_CLAIM_reward1')
-        self.assertEqual(purchase.status, VIPPurchase.Status.COMPLETED)
-        self.assertEqual(purchase.amount_received, self.welcome.target_amount)
+        self.assertEqual(purchase.status, VIPPurchase.Status.ACTIVE)
+        self.assertEqual(purchase.amount_received, Decimal('0'))
+        self.assertIsNone(purchase.completed_at)
+        # No immediate credit of any kind.
         rows = self._welcome_ledger()
-        self.assertEqual(rows.count(), 1)
-        self.assertEqual(rows.get().balance_type, WalletTransaction.BalanceType.BONUS)
-        self.assertEqual(rows.get().amount, Decimal('10.00000000'))
+        self.assertEqual(rows.count(), 0)
         self.refresh()
-        self.assertEqual(self.wallet().bonus_balance, Decimal('10.00000000'))
-        self.assertEqual(self.wallet().total_balance, Decimal('110.00000000'))
+        self.assertEqual(self.wallet().bonus_balance, Decimal('0'))
+        self.assertEqual(
+            self.wallet().total_balance,
+            Decimal('100.00000000'),
+        )
         # No purchase debit and no deposit record were fabricated.
         self.assertFalse(
             WalletTransaction.objects.filter(user=self.user, transaction_type=TT.VIP_PURCHASE).exists()
         )
+        from apps.deposits.models import Deposit
 
-    def test_replay_is_idempotent_no_double_credit(self) -> None:
+        self.assertFalse(Deposit.objects.filter(user=self.user).exists())
+
+    def test_replay_is_idempotent_no_double_activation(self) -> None:
         first = self.buy(self.welcome, 'WELCOME_CLAIM_r1')
         replay = self.buy(self.welcome, 'WELCOME_CLAIM_r1')
         self.assertEqual(replay.pk, first.pk)
-        self.assertEqual(self._welcome_ledger().count(), 1)
+        self.assertEqual(VIPPurchase.objects.filter(user=self.user, vip_plan=self.welcome).count(), 1)
         self.refresh()
-        self.assertEqual(self.wallet().bonus_balance, Decimal('10.00000000'))
+        self.assertEqual(self.wallet().bonus_balance, Decimal('0'))
+        self.assertEqual(
+            WalletTransaction.objects.filter(
+                user=self.user, transaction_type=TT.WELCOME_BONUS, status=WalletTransaction.Status.COMPLETED,
+            ).count(),
+            0,
+        )
 
     def test_second_claim_with_new_key_cannot_double_credit(self) -> None:
         self.buy(self.welcome, 'WELCOME_CLAIM_k1')
         with self.assertRaises(VIPError):
             self.buy(self.welcome, 'WELCOME_CLAIM_k2')
-        self.assertEqual(self._welcome_ledger().count(), 1)
+        self.assertEqual(self._welcome_ledger().count(), 0)
         self.refresh()
-        self.assertEqual(self.wallet().bonus_balance, Decimal('10.00000000'))
+        self.assertEqual(self.wallet().bonus_balance, Decimal('0'))
 
     def test_summary_always_sufficient_for_welcome(self) -> None:
         Wallet.objects.filter(user=self.user).update(

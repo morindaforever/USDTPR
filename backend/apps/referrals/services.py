@@ -12,15 +12,21 @@ place:
 """
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from django.db import transaction
 
 from apps.accounts.models import User
 from apps.core.models import AuditLog
 from apps.notifications.models import Notification
+from apps.wallet.models import WalletTransaction
 
 from . import config
 from .models import Referral
+
+import logging
+
+logger = logging.getLogger('referrals.signup_reward')
 
 
 class ReferralError(Exception):
@@ -95,4 +101,68 @@ def create_relationship(*, referrer: User, referred_user: User) -> RelationshipR
         title='New team member',
         message=f'A new user has joined your Level 1 team ({referred_user.user_id}).',
     )
+    _credit_signup_reward(referrer=referrer, referred_user=referred_user)
     return RelationshipResult(referral=referral, created=True)
+
+
+def _credit_signup_reward(*, referrer: User, referred_user: User) -> None:
+    """One-time signup reward to the referrer (Issue 6).
+
+    Paid through the EXISTING wallet ledger service — never a direct balance
+    write — as a REFERRAL_REWARD transaction credited to the referrer's
+    withdrawable balance (the same bucket referral commissions use).
+
+    Exactly once: the ledger idempotency key ``REFERRAL_REWARD_<user_id>`` is
+    globally unique, so a retried or replayed relationship creation can never
+    pay twice; ``create_relationship`` itself is idempotent and returns early
+    when the relationship already exists.
+
+    Non-fatal: a wallet failure must never block the new member's signup,
+    mirroring the per-ancestor isolation of the commission engine. The
+    failure is logged; the relationship stands.
+    """
+    from apps.notifications.services import notify_event
+    from apps.wallet.services import WalletError, credit
+
+    reward = config.get_signup_reward().quantize(Decimal('0.00000001'))
+    if reward <= 0:
+        return
+    try:
+        credit(
+            user=referrer,
+            amount=reward,
+            balance_type=WalletTransaction.BalanceType.WITHDRAWABLE,
+            transaction_type=WalletTransaction.TransactionType.REFERRAL_REWARD,
+            reference_type='referral',
+            reference_id=str(referred_user.pk),
+            description=f'Referral signup reward — {referred_user.user_id} joined your team',
+            idempotency_key=f'REFERRAL_REWARD_{referred_user.pk}',
+        )
+    except WalletError:
+        logger.exception(
+            'Referral signup reward failed referrer=%s referred=%s',
+            referrer.pk, referred_user.pk,
+        )
+        return
+    AuditLog.objects.create(
+        actor_user=None,
+        action=AuditLog.Action.OTHER,
+        target_type='referral_reward',
+        target_id=str(referred_user.pk),
+        description=(
+            f'Referral signup reward {reward} USDT credited to {referrer.user_id} '
+            f'for new member {referred_user.user_id}.'
+        ),
+    )
+    notify_event(
+        user=referrer,
+        notification_type=Notification.NotificationType.REFERRAL,
+        title='Referral signup reward',
+        message=(
+            f'{reward.quantize(Decimal("0.01"))} USDT referral signup reward credited — '
+            f'{referred_user.user_id} joined your team.'
+        ),
+        event_key=f'referral_reward:{referred_user.pk}',
+        related_type='user',
+        related_id=str(referred_user.pk),
+    )

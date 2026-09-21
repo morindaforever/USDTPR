@@ -84,12 +84,14 @@ def reward_idempotency_key(purchase_id: str, cycle_date: date) -> str:
 
 
 def calculate_daily_reward(purchase: VIPPurchase) -> Decimal:
-    """investment × daily_rate from the purchase SNAPSHOT (§4, §58).
+    """target_amount × daily_rate from the purchase SNAPSHOT (§4, §58).
 
-    Never reads the current VIPPlan — edited plan terms must not rewrite
-    history for existing purchases.
+    The daily return is a percentage of the plan's TARGET amount — e.g.
+    target 50 USDT at 10% pays 5 USDT/day, so the target is reached in
+    exactly 10 daily cycles. Never reads the current VIPPlan — edited plan
+    terms must not rewrite history for existing purchases.
     """
-    reward = (purchase.investment_amount * purchase.daily_rate_snapshot).quantize(
+    reward = (purchase.target_amount * purchase.daily_rate_snapshot).quantize(
         QUANT, rounding=ROUND_HALF_UP
     )
     if reward < 0:  # defensive: DB constraints already forbid negative terms
@@ -440,9 +442,9 @@ def get_purchase_progress(purchase: VIPPurchase, rewarded: Decimal | None = None
     ``rewarded`` may carry a pre-aggregated sum (``active_purchases_with_progress``
     annotation) to avoid a per-row query; otherwise it is computed here.
 
-    Zero-investment WELCOME grants are credited once at claim time (mirrored
-    into ``amount_received``) without daily VIPReward rows, so the reported
-    total is never less than the transactionally-maintained amount.
+    The reported total is never less than the transactionally-maintained
+    ``amount_received`` — a defensive drift guard (the reward engine keeps
+    both in sync; the max() only ever matters after a manual data fix).
     """
     rewarded = get_rewarded_amount(purchase) if rewarded is None else rewarded.quantize(QUANT)
     rewarded = max(rewarded, purchase.amount_received.quantize(QUANT))
@@ -453,6 +455,8 @@ def get_purchase_progress(purchase: VIPPurchase, rewarded: Decimal | None = None
         'rewarded_amount': str(rewarded),
         'remaining_amount': str(remaining),
         'progress_percent': str(min(Decimal('100'), percent).quantize(Decimal('0.01'))),
+        # target × rate — the plan's configured daily reward (Issue 11 display).
+        'daily_reward_amount': str(calculate_daily_reward(purchase).quantize(QUANT)),
         'next_reward_cycle': (current_cycle() + timedelta(days=1)).isoformat(),
         'next_reward_at': next_reward_at().isoformat(),
     }

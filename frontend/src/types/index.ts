@@ -160,6 +160,8 @@ export interface VipPurchase {
   rewarded_amount?: string;
   remaining_amount?: string;
   progress_percent?: string;
+  /** Configured daily reward = target × rate (backend-computed). */
+  daily_reward_amount?: string;
   next_reward_cycle?: string;
 }
 
@@ -176,6 +178,8 @@ export interface VipPurchaseProgress {
   rewarded_amount: string;
   remaining_amount: string;
   progress_percent: string;
+  /** Configured daily reward = target × rate (backend-computed). */
+  daily_reward_amount: string;
   next_reward_cycle: string;
   /** ISO datetime of the next scheduled reward-engine run (Celery beat). */
   next_reward_at?: string;

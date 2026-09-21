@@ -61,6 +61,7 @@ class CurrentPlanSerializer(serializers.ModelSerializer):
     rewarded_amount = serializers.SerializerMethodField()
     remaining_amount = serializers.SerializerMethodField()
     progress_percent = serializers.SerializerMethodField()
+    daily_reward_amount = serializers.SerializerMethodField()
     next_reward_cycle = serializers.SerializerMethodField()
     next_reward_at = serializers.SerializerMethodField()
 
@@ -79,6 +80,7 @@ class CurrentPlanSerializer(serializers.ModelSerializer):
             'rewarded_amount',
             'remaining_amount',
             'progress_percent',
+            'daily_reward_amount',
             'next_reward_cycle',
             'next_reward_at',
         ]
@@ -99,6 +101,9 @@ class CurrentPlanSerializer(serializers.ModelSerializer):
 
     def get_progress_percent(self, obj: VIPPurchase) -> str:
         return self._progress(obj)['progress_percent']
+
+    def get_daily_reward_amount(self, obj: VIPPurchase) -> str:
+        return self._progress(obj)['daily_reward_amount']
 
     def get_next_reward_cycle(self, obj: VIPPurchase) -> str:
         return self._progress(obj)['next_reward_cycle']

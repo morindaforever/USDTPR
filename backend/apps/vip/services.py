@@ -97,36 +97,12 @@ def _check_welcome_claim(user: User, plan: VIPPlan) -> None:
             )
 
 
-def _welcome_reward_key(purchase: VIPPurchase) -> str:
-    """Deterministic ledger key: one welcome reward per purchase, ever."""
-    return f'WELCOME_BONUS_{purchase.purchase_id}'
-
-
-def _credit_welcome_reward(purchase: VIPPurchase) -> None:
-    """Credit a zero-investment WELCOME plan's promotional reward.
-
-    Uses the EXISTING wallet ledger mechanism — the BONUS bucket with the
-    WELCOME_BONUS transaction type — never a fake deposit or a blockchain
-    transaction. The amount is the plan's target/reward amount, taken from
-    the immutable purchase snapshot. Idempotent by construction: the
-    wallet-service credit keyed per purchase can only ever land once, so
-    repeated or concurrent claims cannot double-credit.
-    """
-    reward = purchase.target_amount.quantize(Decimal('0.00000001'))
-    if reward <= 0:
-        return
-    credit(
-        user=purchase.user,
-        amount=reward,
-        balance_type=WalletTransaction.BalanceType.BONUS,
-        transaction_type=WalletTransaction.TransactionType.WELCOME_BONUS,
-        reference_type='vip_purchase',
-        reference_id=purchase.purchase_id,
-        description=(
-            f'Welcome reward (promotional) — {purchase.plan_name_snapshot}'
-        ),
-        idempotency_key=_welcome_reward_key(purchase),
-    )
+# NOTE (Issue 2): the Welcome plan NO LONGER credits anything at claim time.
+# It follows the same daily-reward lifecycle as paid plans: activation leaves
+# the balance untouched (rewarded = 0) and the daily engine credits
+# target_amount × daily_rate each cycle (capped at the remaining target).
+# The former WELCOME_BONUS immediate-credit path was removed in full so the
+# claim + daily engine can never pay the target twice.
 
 
 @dataclass
@@ -194,9 +170,10 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
             {'plan_id': ['Welcome plan can only be claimed once.']},
         ) from exc
 
-    # Zero-investment (WELCOME/free-plan) claims move no balance, so there is
-    # nothing to debit and no ledger row — the claim guard + purchase
-    # idempotency key protect them instead.
+    # Zero-investment (WELCOME) claims move no balance at claim time — the
+    # plan then earns its reward DAILY (target × rate, capped at remaining)
+    # through the normal ACTIVE lifecycle, exactly like paid plans. Nothing
+    # is credited here; no WELCOME_BONUS immediate credit exists anymore.
     if purchase.investment_amount > 0:
         try:
             debit_across(
@@ -221,16 +198,8 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
             raise VIPError('Unable to complete the purchase. Please try again.') from exc
         purchase.status = VIPPurchase.Status.ACTIVE
     else:
-        # Promotional welcome reward: credit the plan's reward amount to the
-        # BONUS bucket through the existing ledger service. No deposit record,
-        # no blockchain transaction — an honest promotional credit. Safe on
-        # replays too: the wallet-service idempotency key is per purchase.
-        _credit_welcome_reward(purchase)
-        # A zero-investment welcome plan grants its full reward at claim time
-        # and accrues nothing daily, so the purchase is complete immediately.
-        purchase.amount_received = purchase.target_amount
-        purchase.status = VIPPurchase.Status.COMPLETED
-        purchase.completed_at = timezone.now()
+        # Promotional activation: rewarded 0 at claim, daily rewards follow.
+        purchase.status = VIPPurchase.Status.ACTIVE
 
     purchase.started_at = timezone.now()
     purchase.save(update_fields=['status', 'started_at', 'completed_at', 'amount_received', 'updated_at'])
@@ -246,13 +215,16 @@ def purchase_plan(*, user: User, plan_id, idempotency_key: str = '') -> Purchase
     else:
         audit_description = (
             f'Claimed {purchase.plan_name_snapshot} (promotional): no investment, '
-            f'welcome reward {purchase.target_amount.quantize(Decimal("0.01"))} USDT '
-            f'credited to the bonus balance.'
+            f'no wallet charge. Daily reward '
+            f'{(purchase.target_amount * purchase.daily_rate_snapshot).quantize(Decimal("0.01"))} USDT '
+            f'begins with the next reward cycle.'
         )
         notification_message = (
-            f'{purchase.plan_name_snapshot} activated — your welcome reward of '
-            f'{purchase.target_amount.quantize(Decimal("0.01"))} USDT (promotional) '
-            f'has been credited to your bonus balance.'
+            f'{purchase.plan_name_snapshot} activated — daily rewards of '
+            f'{(purchase.target_amount * purchase.daily_rate_snapshot).quantize(Decimal("0.01"))} '
+            f'USDT (promotional) will be credited to your withdrawable balance '
+            f'until the reward target of '
+            f'{purchase.target_amount.quantize(Decimal("0.01"))} USDT is reached.'
         )
 
     AuditLog.objects.create(

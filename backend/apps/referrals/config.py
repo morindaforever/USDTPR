@@ -14,6 +14,7 @@ from apps.core.models import SiteSetting
 # SiteSetting keys.
 KEY_LEVEL_RATE = 'referral.level_{level}_rate_percent'
 KEY_MAX_LEVEL = 'referral.max_level'
+KEY_SIGNUP_REWARD = 'referral.signup_reward'
 
 # Coded fallback defaults — configuration only, never a promise of income.
 DEFAULT_RATES = {
@@ -23,9 +24,13 @@ DEFAULT_RATES = {
 }
 DEFAULT_MAX_LEVEL = 3
 HARD_MAX_LEVEL = 5   # engine bound regardless of configuration
+# One-time reward paid to the referrer when a new member joins via their
+# code (Issue 6). Exactly 1 USDT by default; SiteSetting-overridable.
+DEFAULT_SIGNUP_REWARD = Decimal('1')
 
 _RATE_CACHE: dict[int, Decimal] = {}
 _MAX_LEVEL_CACHE: int | None = None
+_SIGNUP_REWARD_CACHE: Decimal | None = None
 
 
 def get_rate_for_level(level: int) -> Decimal:
@@ -63,6 +68,24 @@ def get_max_level() -> int:
     return value
 
 
+def get_signup_reward() -> Decimal:
+    """Configured one-time signup reward for the referrer (Issue 6)."""
+    global _SIGNUP_REWARD_CACHE
+    if _SIGNUP_REWARD_CACHE is not None:
+        return _SIGNUP_REWARD_CACHE
+    raw = SiteSetting.objects.filter(key=KEY_SIGNUP_REWARD).values_list('value', flat=True).first()
+    reward = DEFAULT_SIGNUP_REWARD
+    if raw is not None:
+        try:
+            reward = Decimal(raw)
+        except InvalidOperation:
+            reward = DEFAULT_SIGNUP_REWARD
+    if reward < 0:
+        reward = Decimal('0')
+    _SIGNUP_REWARD_CACHE = reward
+    return reward
+
+
 def rates_snapshot() -> dict[int, Decimal]:
     """All configured rates (1..max_level) for APIs/serializers."""
     return {level: get_rate_for_level(level) for level in range(1, get_max_level() + 1)}
@@ -70,6 +93,7 @@ def rates_snapshot() -> dict[int, Decimal]:
 
 def reset_cache() -> None:
     """Clear cached configuration (used by tests)."""
-    global _MAX_LEVEL_CACHE
+    global _MAX_LEVEL_CACHE, _SIGNUP_REWARD_CACHE
     _RATE_CACHE.clear()
     _MAX_LEVEL_CACHE = None
+    _SIGNUP_REWARD_CACHE = None

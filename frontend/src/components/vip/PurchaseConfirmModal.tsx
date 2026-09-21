@@ -74,23 +74,34 @@ export function PurchaseConfirmModal({
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-surface-500">{Number(plan.investment_amount) === 0 ? 'Welcome Reward' : 'Target'}</dt>
+              <dt className="text-surface-500">
+                {Number(plan.investment_amount) === 0 ? 'Welcome Reward Target' : 'Target'}
+              </dt>
               <dd className="font-semibold tabular-nums text-surface-900">
                 {formatUsdt(plan.target_amount)} USDT
               </dd>
             </div>
-            {Number(plan.investment_amount) === 0 ? (
+            <div className="flex items-center justify-between">
+              <dt className="text-surface-500">Daily Return</dt>
+              <dd className="font-semibold tabular-nums text-brand-700">
+                {plan.daily_rate_percent}%
+              </dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-surface-500">Daily Reward</dt>
+              <dd className="font-semibold tabular-nums text-brand-700">
+                {formatUsdt(
+                  (Number(plan.target_amount) * Number(plan.daily_rate)).toFixed(2),
+                )}{' '}
+                USDT
+              </dd>
+            </div>
+            {Number(plan.investment_amount) === 0 && (
               <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
-                Promotional welcome reward — credited once to your bonus balance when
-                claimed. Not investment profit. Does not unlock withdrawals.
+                Promotional welcome reward — accrues daily from the next reward cycle
+                until the reward target is reached. Nothing is spent or credited at
+                claim time. Not investment profit. Does not unlock withdrawals.
               </p>
-            ) : (
-              <div className="flex items-center justify-between">
-                <dt className="text-surface-500">Daily rate</dt>
-                <dd className="font-semibold tabular-nums text-brand-700">
-                  {plan.daily_rate_percent}%
-                </dd>
-              </div>
             )}
             <div className="my-2 border-t border-surface-200" />
             <div className="flex items-center justify-between">
@@ -147,7 +158,8 @@ export function PurchaseConfirmModal({
         )}
         {!isLoading && summary && Number(plan?.investment_amount) === 0 && (
           <p className="mt-2 text-center text-xs text-surface-500">
-            No wallet balance is required — nothing is spent when claiming.
+            No wallet balance is required — nothing is spent when claiming; daily
+            rewards begin with the next reward cycle.
           </p>
         )}
       </div>

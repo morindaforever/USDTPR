@@ -226,14 +226,16 @@ class CommissionCalculationTests(ReferralChainTestCase):
     def test_balances_and_ledger_agree(self) -> None:
         reward = self._reward_for(self.d, Decimal('25.00'))
         on_referral_reward_credited(reward)
-        for user, expected in [(self.c, '2.50'), (self.b, '1.25'), (self.a, '0.50')]:
+        # Issue 6: each member also holds a 1 USDT signup reward paid by
+        # their downline signup (b→a, c→b, d→c), so expected = commission + 1.
+        for user, expected in [(self.c, '3.50'), (self.b, '2.25'), (self.a, '1.50')]:
             summary = get_wallet_summary(user)
             self.assertEqual(summary['withdrawable_balance'], Decimal(expected).quantize(Decimal('0.00000001')))
             txn = WalletTransaction.objects.filter(
                 user=user, transaction_type=WalletTransaction.TransactionType.REFERRAL_COMMISSION,
             )
             self.assertEqual(txn.count(), 1)
-            self.assertEqual(txn.first().amount, Decimal(expected))
+            self.assertEqual(txn.first().amount, Decimal(expected) - Decimal('1'))
             self.assertEqual(txn.first().direction, WalletTransaction.Direction.CREDIT)
 
     def test_rate_and_level_snapshotted(self) -> None:
@@ -307,6 +309,9 @@ class CommissionCalculationTests(ReferralChainTestCase):
 
     def test_wallet_failure_marks_failed_not_fatal(self) -> None:
         reward = self._reward_for(self.d, Decimal('10.00'))
+        # Baselines include the 1 USDT signup rewards already credited on
+        # signup (Issue 6) — commissions failing must not move them.
+        baseline = {u: get_wallet_summary(u)['withdrawable_balance'] for u in (self.a, self.b, self.c)}
         with patch('apps.referrals.commission_service.credit') as mock_credit:
             from apps.wallet.services import WalletError
 
@@ -314,9 +319,9 @@ class CommissionCalculationTests(ReferralChainTestCase):
             outcomes = on_referral_reward_credited(reward)
         self.assertTrue(all(o.status == 'failed' for o in outcomes))
         self.assertTrue(all(c.status == ReferralCommission.Status.FAILED for c in ReferralCommission.objects.filter(source_user=self.d)))
-        # Balances untouched.
+        # Balances untouched by the FAILED commissions.
         for user in (self.a, self.b, self.c):
-            self.assertEqual(get_wallet_summary(user)['withdrawable_balance'], Decimal('0E-8'))
+            self.assertEqual(get_wallet_summary(user)['withdrawable_balance'], baseline[user])
         # Retry with working wallet repays the FAILED rows, not duplicates.
         outcomes2 = on_referral_reward_credited(reward)
         self.assertTrue(all(o.status == 'credited' for o in outcomes2))
@@ -448,3 +453,110 @@ class CommissionConcurrencyTests(TransactionTestCase):
             user=a, transaction_type=WalletTransaction.TransactionType.REFERRAL_COMMISSION,
         )
         self.assertEqual(ledger.count(), 1)
+
+
+class ReferralSignupRewardTests(TestCase):
+    """Issue 6 — one-time 1 USDT signup reward to the referrer.
+
+    Paid through the existing wallet ledger (REFERRAL_REWARD → withdrawable),
+    exactly once per referred member, idempotent on retries, and never a
+    deposit/commission transaction.
+    """
+
+    @classmethod
+    def setUpTestData(cls) -> None:
+        call_command('seed_demo_data', verbosity=0)
+        config.reset_cache()
+
+    def _reward_rows(self, user):
+        return WalletTransaction.objects.filter(
+            user=user,
+            transaction_type=WalletTransaction.TransactionType.REFERRAL_REWARD,
+            status=WalletTransaction.Status.COMPLETED,
+        )
+
+    def test_referrer_receives_exactly_1_usdt(self) -> None:
+        referrer = _mk('reward-ref@example.com', 5001)
+        _mk('reward-new@example.com', 5002, referrer=referrer)
+        rows = self._reward_rows(referrer)
+        self.assertEqual(rows.count(), 1)
+        self.assertEqual(rows.get().amount, Decimal('1'))
+        self.assertEqual(rows.get().balance_type, WalletTransaction.BalanceType.WITHDRAWABLE)
+        summary = get_wallet_summary(referrer)
+        self.assertEqual(summary['withdrawable_balance'], Decimal('1'))
+
+    def test_reward_is_never_a_deposit_or_commission(self) -> None:
+        referrer = _mk('reward-kind@example.com', 5003)
+        _mk('reward-kind2@example.com', 5004, referrer=referrer)
+        self.assertFalse(
+            WalletTransaction.objects.filter(
+                user=referrer, transaction_type=WalletTransaction.TransactionType.DEPOSIT,
+            ).exists()
+        )
+        self.assertEqual(ReferralCommission.objects.count(), 0)
+
+    def test_reward_references_the_referral(self) -> None:
+        referrer = _mk('reward-refref@example.com', 5005)
+        new_user = _mk('reward-new2@example.com', 5006, referrer=referrer)
+        row = self._reward_rows(referrer).get()
+        self.assertEqual(row.reference_type, 'referral')
+        self.assertEqual(row.reference_id, str(new_user.pk))
+        self.assertIn('signup reward', row.description.lower())
+        self.assertEqual(row.idempotency_key, f'REFERRAL_REWARD_{new_user.pk}')
+
+    def test_repeated_relationship_calls_cannot_duplicate(self) -> None:
+        referrer = _mk('reward-idem@example.com', 5007)
+        new_user = _mk('reward-idem2@example.com', 5008, referrer=referrer)
+        create_relationship(referrer=referrer, referred_user=new_user)
+        create_relationship(referrer=referrer, referred_user=new_user)
+        self.assertEqual(self._reward_rows(referrer).count(), 1)
+
+    def test_self_referral_pays_nothing(self) -> None:
+        user = _mk('reward-self@example.com', 5009)
+        with self.assertRaises(ReferralError):
+            create_relationship(referrer=user, referred_user=user)
+        self.assertEqual(self._reward_rows(user).count(), 0)
+
+    def test_invalid_referral_code_never_rewards(self) -> None:
+        with self.assertRaises(Exception):
+            register_user(
+                full_name='X', email='reward-badcode@example.com', phone='+19912345010',
+                password=PASSWORD, referral_code='ZZZZ999',
+            )
+        self.assertFalse(
+            WalletTransaction.objects.filter(
+                transaction_type=WalletTransaction.TransactionType.REFERRAL_REWARD,
+            ).exists()
+        )
+
+    def test_two_referrals_reward_twice(self) -> None:
+        referrer = _mk('reward-two@example.com', 5011)
+        _mk('reward-two2@example.com', 5012, referrer=referrer)
+        _mk('reward-two3@example.com', 5013, referrer=referrer)
+        self.assertEqual(self._reward_rows(referrer).count(), 2)
+        self.assertEqual(get_wallet_summary(referrer)['withdrawable_balance'], Decimal('2'))
+
+    def test_reward_amount_is_configurable(self) -> None:
+        from apps.core.models import SiteSetting
+
+        referrer = _mk('reward-cfg@example.com', 5016)
+        SiteSetting.objects.create(key=config.KEY_SIGNUP_REWARD, value='2.5')
+        config.reset_cache()
+        try:
+            _mk('reward-cfg2@example.com', 5017, referrer=referrer)
+            rows = self._reward_rows(referrer)
+            self.assertEqual(rows.count(), 1)
+            self.assertEqual(rows.get().amount, Decimal('2.5'))
+        finally:
+            SiteSetting.objects.filter(key=config.KEY_SIGNUP_REWARD).delete()
+            config.reset_cache()
+
+    def test_member_list_still_works_with_reward(self) -> None:
+        referrer = _mk('reward-list@example.com', 5018)
+        _mk('reward-list2@example.com', 5019, referrer=referrer)
+        self.assertTrue(Referral.objects.filter(referrer=referrer).exists())
+        self.assertTrue(
+            Notification.objects.filter(
+                user=referrer, notification_type=Notification.NotificationType.REFERRAL,
+            ).exists()
+        )

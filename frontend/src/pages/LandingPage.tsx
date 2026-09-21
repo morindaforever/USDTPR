@@ -21,9 +21,9 @@ const FEATURES = [
   },
   {
     icon: Crown,
-    title: 'VIP tiers',
+    title: 'Investment plans',
     description:
-      'Unlock tiers with increasing benefits as you participate on the platform.',
+      'Choose from available USDT plans, each with a defined investment amount, target reward amount, and configured daily reward rate.',
   },
   {
     icon: Users,
@@ -64,31 +64,37 @@ const STEPS = [
   },
   {
     step: '03',
-    title: 'Grow with the platform',
-    description: 'Join VIP tiers and build your team to unlock more benefits.',
+    title: 'Choose a plan and track rewards',
+    description:
+      'Pick an available USDT plan and follow its reward progress in your dashboard.',
   },
 ];
 
 const FAQ = [
   {
-    question: 'Is this a real investment platform?',
+    question: 'What is NexusUSDT?',
     answer:
-      'NexusUSDT is a platform for exploring wallet, VIP, reward, referral, and transaction workflows.',
+      'NexusUSDT is a USDT-based digital investment platform where users can access available plans with defined investment amounts, target reward amounts, and configured daily reward rates.',
   },
   {
     question: 'How do deposits work?',
     answer:
-      'Deposits are submitted for manual review by an administrator.',
+      'Deposits are submitted with the transaction details and reviewed manually by the platform team before your balance is credited.',
   },
   {
-    question: 'Are the rewards real income?',
+    question: 'How do plan rewards work?',
     answer:
-      'VIP rewards and referral commissions are calculated based on plan terms.',
+      'Each plan displays its investment, reward target, and daily reward rate. Rewards accrue daily until the plan reaches its target, then the plan completes. A free Welcome plan offers a small promotional reward under the same daily mechanism.',
   },
   {
     question: 'Can I withdraw money?',
     answer:
-      'Withdrawal requests are reviewed and processed by the platform team.',
+      'Withdrawal requests are reviewed and processed by the platform team. Eligibility rules apply and are shown before you submit a request.',
+  },
+  {
+    question: 'Are returns guaranteed?',
+    answer:
+      'No. Digital assets and investment activities involve risk. Returns are not guaranteed, and you should review the terms and risks before participating.',
   },
 ];
 
@@ -142,15 +148,16 @@ export function LandingPage() {
           </div>
 
           <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight text-white md:text-6xl">
-            Explore the USDT platform for{' '}
+            A USDT-based platform for{' '}
             <span className="bg-gradient-to-r from-brand-300 to-brand-500 bg-clip-text text-transparent">
-              wallets, VIP tiers,
+              investment plans
             </span>{' '}
-            and team rewards
+            and daily rewards
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-surface-300 md:text-lg">
-            Explore wallet, VIP, reward, referral, and transaction workflows —
-            mobile-first, with every balance change recorded in an auditable ledger.
+            NexusUSDT lets you fund a USDT wallet, choose from available investment
+            plans with defined targets and daily reward rates, and track every
+            balance change in an auditable ledger.
           </p>
 
           <p className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-amber-300">
@@ -175,7 +182,7 @@ export function LandingPage() {
             {[
               ['24/7', 'Platform access'],
               ['USDT', 'Core currency'],
-              ['3 tiers', 'VIP roadmap'],
+              ['Daily', 'Reward cycles'],
             ].map(([value, label]) => (
               <div
                 key={label}
@@ -257,10 +264,10 @@ export function LandingPage() {
           />
           <div className="relative">
             <h2 className="font-display text-2xl font-bold text-white md:text-3xl">
-              Ready to explore the platform?
+              Ready to get started?
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm text-surface-300 md:text-base">
-              Create an account to follow along as new modules go live.
+              Create an account, fund your wallet, and review the available plans.
             </p>
             <Link to="/signup" className="mt-7 inline-flex items-center gap-2">
               <Button size="lg">
@@ -294,6 +301,19 @@ export function LandingPage() {
               </div>
             ))}
           </dl>
+        </div>
+      </section>
+
+      {/* Risk disclosure — plain statement, no disclaimers hidden in footers. */}
+      <section className="mx-auto w-full max-w-3xl px-4 pb-14 md:px-6 md:pb-20">
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <h2 className="text-sm font-semibold text-amber-900">Risk disclosure</h2>
+          <p className="mt-2 text-sm leading-relaxed text-amber-800">
+            Digital assets and investment activities involve risk. Returns are not
+            guaranteed, and users should review the terms and risks before
+            participating. NexusUSDT does not promise guaranteed profits, risk-free
+            investment, or regulatory approval of any kind.
+          </p>
         </div>
       </section>
     </div>

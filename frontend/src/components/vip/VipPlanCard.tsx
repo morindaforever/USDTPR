@@ -47,21 +47,29 @@ export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCard
           </dd>
         </div>
         <div className="flex items-center justify-between">
-          <dt className="text-surface-500">{isWelcome ? 'Welcome Reward' : 'Target'}</dt>
+          <dt className="text-surface-500">{isWelcome ? 'Welcome Reward Target' : 'Target'}</dt>
           <dd className="font-semibold tabular-nums text-surface-900">
             {formatUsdt(plan.target_amount)} USDT
           </dd>
         </div>
-        {isWelcome ? (
+        <div className="flex items-center justify-between">
+          <dt className="text-surface-500">Daily Return</dt>
+          <dd className="font-semibold tabular-nums text-brand-700">{plan.daily_rate_percent}%</dd>
+        </div>
+        <div className="flex items-center justify-between">
+          <dt className="text-surface-500">Daily Reward</dt>
+          <dd className="font-semibold tabular-nums text-brand-700">
+            {formatUsdt(
+              (Number(plan.target_amount) * Number(plan.daily_rate)).toFixed(2),
+            )}{' '}
+            USDT
+          </dd>
+        </div>
+        {isWelcome && (
           <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
-            Promotional reward — credited once when claimed. Not investment profit.
-            Does not unlock withdrawals.
+            Promotional reward — accrues daily from the next reward cycle until the
+            reward target is reached. Not investment profit. Does not unlock withdrawals.
           </p>
-        ) : (
-          <div className="flex items-center justify-between">
-            <dt className="text-surface-500">Daily rate</dt>
-            <dd className="font-semibold tabular-nums text-brand-700">{plan.daily_rate_percent}%</dd>
-          </div>
         )}
       </dl>
 
