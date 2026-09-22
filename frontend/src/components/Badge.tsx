@@ -8,12 +8,12 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const TONE_CLASSES: Record<BadgeTone, string> = {
-  neutral: 'bg-surface-100 text-surface-700 ring-surface-200',
-  success: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  warning: 'bg-accent-50 text-accent-700 ring-accent-200',
-  danger: 'bg-red-50 text-red-700 ring-red-200',
-  info: 'bg-sky-50 text-sky-700 ring-sky-200',
-  brand: 'bg-brand-50 text-brand-700 ring-brand-200',
+  neutral: 'bg-surface-200 text-surface-600 ring-surface-300',
+  success: 'bg-brand-500/12 text-brand-400 ring-brand-500/30',
+  warning: 'bg-accent-500/12 text-accent-600 ring-accent-500/30',
+  danger: 'bg-danger-500/12 text-danger-600 ring-danger-500/30',
+  info: 'bg-info-500/12 text-info-600 ring-info-500/30',
+  brand: 'bg-brand-500/12 text-brand-400 ring-brand-500/30',
 };
 
 /** Compact status label used in lists, tables, and detail rows. */

@@ -5,19 +5,71 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    color-scheme: dark;
   }
 
   body {
-    @apply font-sans;
+    @apply bg-surface-950 font-sans text-surface-700 antialiased;
+    font-feature-settings: 'tnum' 1, 'cv05' 1;
   }
 
   ::selection {
-    @apply bg-brand-500/20;
+    @apply bg-brand-500/30 text-white;
+  }
+
+  /* Subtle dark scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2a3542 transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: #2a3542;
+    border-radius: 8px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Focus visibility for keyboard users */
+  :focus-visible {
+    outline: 2px solid #12b76a;
+    outline-offset: 2px;
   }
 }
 
 @layer components {
   .page-enter {
     @apply animate-fade-in-up;
+  }
+
+  /* Financial figure typography — display numerals for metrics */
+  .figure {
+    @apply font-display font-bold tabular-nums tracking-tight;
+  }
+
+  /* Sectioned page label (eyebrow) */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-surface-500;
+  }
+
+  /* Dotted carbon-fiber texture used sparingly behind hero surfaces */
+  .bg-grid {
+    background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.05) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

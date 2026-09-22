@@ -176,7 +176,7 @@ export function AdminDepositsPage() {
       >
         {action && (
           <div className="space-y-4">
-            <dl className="space-y-1.5 rounded-xl bg-white/5 p-3 text-sm">
+            <dl className="space-y-1.5 rounded-xl bg-surface-200/40 p-3 text-sm">
               <div className="flex justify-between"><dt className="text-surface-400">User</dt><dd>{action.row.user_id}</dd></div>
               <div className="flex justify-between"><dt className="text-surface-400">Amount</dt><dd className="tabular-nums">{formatUsdt(action.row.amount)} USDT</dd></div>
               <div className="flex justify-between"><dt className="text-surface-400">Network</dt><dd>{action.row.network}</dd></div>
@@ -191,7 +191,7 @@ export function AdminDepositsPage() {
                   rows={3}
                   maxLength={500}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full resize-none rounded-xl border border-white/10 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
+                  className="w-full resize-none rounded-xl border border-surface-200 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
                 />
               </div>
             )}
@@ -256,10 +256,10 @@ export function AdminDepositsPage() {
                   <img
                     src={screenshotUrl}
                     alt="User payment screenshot"
-                    className="max-h-72 rounded-xl border border-white/10"
+                    className="max-h-72 rounded-xl border border-surface-200"
                   />
                 ) : (
-                  <div className="h-40 w-full animate-pulse rounded-xl bg-white/5" />
+                  <div className="h-40 w-full animate-pulse rounded-xl bg-surface-200/40" />
                 )}
               </div>
             )}
@@ -277,7 +277,7 @@ export function AdminDepositsPage() {
                   setNoteDraft(e.target.value);
                   setNoteSaved(false);
                 }}
-                className="w-full resize-none rounded-xl border border-white/10 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
+                className="w-full resize-none rounded-xl border border-surface-200 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
               />
               <div className="mt-2 flex items-center gap-2">
                 <Button size="sm" variant="secondary" isLoading={noteBusy} onClick={() => void saveNote()}>

@@ -42,7 +42,7 @@ export function NotificationBell() {
       }
       className={cn(
         'relative rounded-lg p-2 text-surface-500 transition-colors',
-        'hover:bg-surface-100 hover:text-surface-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600',
+        'hover:bg-surface-300 hover:text-surface-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600',
       )}
     >
       <Bell className="h-5 w-5" aria-hidden />
@@ -51,7 +51,7 @@ export function NotificationBell() {
           aria-hidden
           className={cn(
             'absolute -right-0.5 -top-0.5 min-w-[1.1rem] rounded-full bg-accent-500 px-1 text-center',
-            'text-[10px] font-bold leading-[1.1rem] text-white ring-2 ring-white',
+            'text-[10px] font-bold leading-[1.1rem] text-white ring-2 ring-surface-950',
           )}
         >
           {unread > 99 ? '99+' : unread}

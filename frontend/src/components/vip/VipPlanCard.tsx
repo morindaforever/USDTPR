@@ -16,11 +16,11 @@ export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCard
   const investsNothing = Number(plan.investment_amount) === 0;
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-surface-200 bg-white p-5 transition-shadow hover:shadow-md">
+    <div className="group flex h-full flex-col rounded-2xl border border-surface-200 bg-surface-50 p-5 transition-all duration-200 hover:border-surface-300 hover:shadow-card-hover">
       <div className="flex items-start justify-between">
         <div
           className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-            isWelcome ? 'bg-accent-50 text-accent-600' : 'bg-brand-50 text-brand-600'
+            isWelcome ? 'bg-accent-500/12 text-accent-600' : 'bg-brand-500/12 text-brand-400'
           }`}
         >
           {isWelcome ? (
@@ -34,7 +34,7 @@ export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCard
         </div>
       </div>
 
-      <h3 className="mt-3 text-base font-semibold text-surface-900">{plan.name}</h3>
+      <h3 className="mt-3 text-base font-semibold text-surface-800">{plan.name}</h3>
       <p className="mt-0.5 text-xs text-surface-500">
         {isWelcome ? 'Free plan' : `Plan ${plan.plan_number}`}
       </p>
@@ -42,23 +42,23 @@ export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCard
       <dl className="mt-4 space-y-2.5 text-sm">
         <div className="flex items-center justify-between">
           <dt className="text-surface-500">Investment</dt>
-          <dd className="font-semibold tabular-nums text-surface-900">
+          <dd className="font-semibold tabular-nums text-surface-800">
             {investsNothing ? 'Free — 0 USDT' : `${formatUsdt(plan.investment_amount)} USDT`}
           </dd>
         </div>
         <div className="flex items-center justify-between">
           <dt className="text-surface-500">{isWelcome ? 'Welcome Reward Target' : 'Target'}</dt>
-          <dd className="font-semibold tabular-nums text-surface-900">
+          <dd className="font-semibold tabular-nums text-surface-800">
             {formatUsdt(plan.target_amount)} USDT
           </dd>
         </div>
         <div className="flex items-center justify-between">
           <dt className="text-surface-500">Daily Return</dt>
-          <dd className="font-semibold tabular-nums text-brand-700">{plan.daily_rate_percent}%</dd>
+          <dd className="font-semibold tabular-nums text-brand-400">{plan.daily_rate_percent}%</dd>
         </div>
         <div className="flex items-center justify-between">
           <dt className="text-surface-500">Daily Reward</dt>
-          <dd className="font-semibold tabular-nums text-brand-700">
+          <dd className="font-semibold tabular-nums text-brand-400">
             {formatUsdt(
               (Number(plan.target_amount) * Number(plan.daily_rate)).toFixed(2),
             )}{' '}
@@ -66,7 +66,7 @@ export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCard
           </dd>
         </div>
         {isWelcome && (
-          <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+          <p className="rounded-xl bg-accent-500/10 px-3 py-2 text-[11px] leading-relaxed text-accent-800">
             Promotional reward — accrues daily from the next reward cycle until the
             reward target is reached. Not investment profit. Does not unlock withdrawals.
           </p>
@@ -80,8 +80,8 @@ export function VipPlanCard({ plan, alreadyHeld = false, onSelect }: VipPlanCard
         disabled={alreadyHeld}
         className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors ${
           alreadyHeld
-            ? 'cursor-not-allowed bg-surface-100 text-surface-400'
-            : 'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800'
+            ? 'cursor-not-allowed bg-surface-100 text-surface-500'
+            : 'bg-brand-500 text-white shadow-glow hover:bg-brand-400 active:bg-brand-600'
         }`}
       >
         {alreadyHeld ? 'Claimed' : isWelcome ? 'Claim Welcome Reward' : 'Purchase'}

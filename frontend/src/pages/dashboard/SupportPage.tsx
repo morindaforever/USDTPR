@@ -25,10 +25,10 @@ const STATUS_LABELS: Record<SupportConversation['status'], string> = {
 };
 
 const STATUS_TONES: Record<SupportConversation['status'], string> = {
-  OPEN: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  IN_PROGRESS: 'bg-amber-50 text-amber-700 ring-amber-200',
-  RESOLVED: 'bg-sky-50 text-sky-700 ring-sky-200',
-  CLOSED: 'bg-surface-100 text-surface-600 ring-surface-200',
+  OPEN: 'bg-brand-500/10 text-brand-400 ring-emerald-200',
+  IN_PROGRESS: 'bg-accent-500/10 text-accent-700 ring-amber-200',
+  RESOLVED: 'bg-info-50 text-info-700 ring-sky-200',
+  CLOSED: 'bg-surface-100 text-surface-600 ring-surface-300',
 };
 
 /** Support center (Section 11 §27–§28): the user's own conversations. */
@@ -80,8 +80,8 @@ export function SupportPage() {
               className={cn(
                 'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors',
                 statusFilter === key
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-surface-100 text-surface-600 hover:bg-surface-200',
+                  ? 'bg-brand-600 text-surface-800'
+                  : 'bg-surface-100 text-surface-600 hover:bg-surface-300',
               )}
             >
               {label}
@@ -96,9 +96,9 @@ export function SupportPage() {
             <Skeleton className="h-24 w-full rounded-2xl" />
           </div>
         ) : listQuery.error ? (
-          <div className="rounded-2xl border border-surface-200 bg-white p-5 text-center">
+          <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 text-center">
             <p className="flex items-center justify-center gap-2 text-sm text-surface-600">
-              <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
+              <AlertTriangle className="h-4 w-4 text-accent-600" aria-hidden />
               Unable to load conversations.
             </p>
             <Button variant="outline" size="sm" className="mt-3" leftIcon={<RefreshCw className="h-4 w-4" />} onClick={listQuery.retry}>
@@ -107,7 +107,7 @@ export function SupportPage() {
           </div>
         ) : (listQuery.data ?? []).length === 0 ? (
           <div className="rounded-2xl border border-dashed border-surface-200 p-8 text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/12 text-brand-400">
               <LifeBuoy className="h-6 w-6" aria-hidden />
             </div>
             <p className="mt-3 text-sm font-medium text-surface-700">No conversations yet</p>
@@ -125,11 +125,11 @@ export function SupportPage() {
                 <button
                   type="button"
                   onClick={() => navigate(`/support/${conversation.conversation_id}`)}
-                  className="w-full rounded-2xl border border-surface-200 bg-white p-4 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/30"
+                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 p-4 text-left transition-colors hover:border-brand-500/30 hover:bg-brand-500/10/30"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-surface-900">
+                      <p className="truncate text-sm font-semibold text-surface-800">
                         {conversation.subject}
                       </p>
                       <p className="mt-0.5 font-mono text-[11px] text-surface-400">

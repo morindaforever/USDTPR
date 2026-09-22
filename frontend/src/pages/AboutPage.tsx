@@ -33,7 +33,7 @@ export function AboutPage() {
       <div className="space-y-6">
         <Card>
           <div className="p-5">
-            <h2 className="text-sm font-semibold text-surface-900">The short version</h2>
+            <h2 className="text-sm font-semibold text-surface-800">The short version</h2>
             <p className="mt-2 text-sm leading-relaxed text-surface-600">
               NexusUSDT is a USDT-based digital investment platform where users can
               access available plans with defined investment amounts, target reward
@@ -48,8 +48,8 @@ export function AboutPage() {
 
         <Card>
           <div className="p-5">
-            <h2 className="text-sm font-semibold text-amber-900">Risk disclosure</h2>
-            <p className="mt-2 text-sm leading-relaxed text-amber-800">
+            <h2 className="text-sm font-semibold text-accent-800">Risk disclosure</h2>
+            <p className="mt-2 text-sm leading-relaxed text-accent-800">
               Digital assets and investment activities involve risk. Returns are not
               guaranteed, and users should review the terms and risks before
               participating. Past performance of any plan configuration does not
@@ -60,14 +60,14 @@ export function AboutPage() {
         </Card>
 
         <section aria-labelledby="principles-heading">
-          <h2 id="principles-heading" className="mb-3 font-display text-lg font-bold text-surface-900">
+          <h2 id="principles-heading" className="mb-3 font-display text-lg font-bold text-surface-800">
             How it is built
           </h2>
           <div className="grid gap-4 sm:grid-cols-3">
             {PRINCIPLES.map((p) => (
               <Card key={p.title}>
                 <div className="p-4">
-                  <h3 className="text-sm font-semibold text-surface-900">{p.title}</h3>
+                  <h3 className="text-sm font-semibold text-surface-800">{p.title}</h3>
                   <p className="mt-1.5 text-sm leading-relaxed text-surface-500">{p.body}</p>
                 </div>
               </Card>
@@ -76,24 +76,24 @@ export function AboutPage() {
         </section>
 
         <section aria-labelledby="roadmap-heading">
-          <h2 id="roadmap-heading" className="mb-3 font-display text-lg font-bold text-surface-900">
+          <h2 id="roadmap-heading" className="mb-3 font-display text-lg font-bold text-surface-800">
             Build roadmap
           </h2>
           <Card>
-            <ul className="divide-y divide-surface-100">
+            <ul className="divide-y divide-surface-200">
               {ROADMAP.map((item) => (
                 <li key={item.phase} className="flex items-center justify-between gap-4 px-4 py-3.5">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-surface-400">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-surface-500">
                       {item.phase}
                     </p>
-                    <p className="mt-0.5 text-sm font-medium text-surface-900">{item.title}</p>
+                    <p className="mt-0.5 text-sm font-medium text-surface-800">{item.title}</p>
                   </div>
                   <span
                     className={
                       item.current
-                        ? 'inline-flex rounded-full bg-brand-50 px-2.5 py-1 text-[11px] font-semibold text-brand-700 ring-1 ring-inset ring-brand-200'
-                        : 'inline-flex rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-semibold text-surface-500 ring-1 ring-inset ring-surface-200'
+                        ? 'inline-flex rounded-full bg-brand-500/12 px-2.5 py-1 text-[11px] font-semibold text-brand-400 ring-1 ring-inset ring-brand-200'
+                        : 'inline-flex rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-semibold text-surface-500 ring-1 ring-inset ring-surface-300'
                     }
                   >
                     {item.status}

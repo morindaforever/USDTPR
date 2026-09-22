@@ -107,7 +107,7 @@ export function TransactionDetailPage() {
       actions={
         <Link
           to="/transactions"
-          className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-100"
         >
           <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
           Back to history
@@ -121,7 +121,7 @@ export function TransactionDetailPage() {
             <span
               className={cn(
                 'inline-flex h-12 w-12 items-center justify-center rounded-2xl',
-                isCredit ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-100 text-surface-600',
+                isCredit ? 'bg-brand-500/10 text-brand-400' : 'bg-surface-100 text-surface-600',
               )}
             >
               {isCredit ? (
@@ -133,7 +133,7 @@ export function TransactionDetailPage() {
             <p
               className={cn(
                 'font-display text-3xl font-bold tabular-nums',
-                isCredit ? 'text-emerald-700' : 'text-surface-900',
+                isCredit ? 'text-brand-400' : 'text-surface-800',
               )}
             >
               {isCredit ? '+' : '−'}
@@ -145,7 +145,7 @@ export function TransactionDetailPage() {
 
         {/* §25 field set — exactly what the ledger serializer exposes. */}
         <Card>
-          <div className="divide-y divide-surface-100">
+          <div className="divide-y divide-surface-200">
             <DetailRow
               label="Type"
               value={TYPE_LABELS[data.type] ?? data.type}
@@ -178,7 +178,7 @@ export function TransactionDetailPage() {
         {reference && (
           <Link
             to={reference.to}
-            className="flex items-center justify-between rounded-xl border border-surface-200 bg-white px-4 py-3 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50"
+            className="flex items-center justify-between rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 text-sm font-semibold text-brand-400 transition-colors hover:bg-brand-500/10"
           >
             {reference.label}
             <ArrowUpRight className="h-4 w-4" aria-hidden />

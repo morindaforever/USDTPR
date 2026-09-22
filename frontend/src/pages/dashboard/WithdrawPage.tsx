@@ -175,7 +175,7 @@ export function WithdrawPage() {
         <button
           type="button"
           onClick={() => navigate('/home')}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 px-3.5 py-2 text-sm font-semibold text-surface-700 transition-colors hover:bg-surface-50"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-surface-300 px-3.5 py-2 text-sm font-semibold text-surface-700 transition-colors hover:bg-surface-200"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back to Dashboard
@@ -184,7 +184,7 @@ export function WithdrawPage() {
     >
       <div className="space-y-6">
         {/* Notice */}
-        <div className="flex gap-3 rounded-xl bg-sky-50 p-3.5 text-sky-900 ring-1 ring-inset ring-sky-200">
+        <div className="flex gap-3 rounded-xl bg-info-500/10 p-3.5 text-info-700 ring-1 ring-inset ring-info-500/25">
           <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
           <div className="text-sm">
             <p className="font-semibold">Withdrawable balance rules</p>
@@ -198,28 +198,29 @@ export function WithdrawPage() {
         </div>
 
         {/* Balance card — all values backend-computed (§6) */}
-        <section className="rounded-2xl bg-gradient-to-br from-brand-700 to-brand-900 p-5 text-white shadow-card">
-          <div className="flex items-start justify-between">
+        <section aria-label="Withdrawable balance" className="relative overflow-hidden rounded-2xl border border-surface-200 bg-surface-50 p-6 shadow-card">
+          <div aria-hidden className="bg-grid pointer-events-none absolute inset-0 opacity-60" />
+        <div className="relative flex items-start justify-between">
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-brand-200">
+              <p className="eyebrow">
                 Withdrawable Balance
               </p>
               {summaryQuery.isLoading ? (
-                <div className="mt-1.5 h-8 w-32 animate-pulse rounded-lg bg-white/20" />
+                <div className="mt-1.5 h-8 w-32 animate-pulse rounded-lg bg-surface-200/60" />
               ) : (
-                <p className="mt-1 text-3xl font-bold tabular-nums">
+                <p className="mt-1 figure text-3xl md:text-4xl">
                   {summary ? formatUsdt(summary.withdrawable_balance) : '—'}{' '}
-                  <span className="text-base font-semibold text-brand-200">USDT</span>
+                  <span className="text-base font-semibold text-brand-400">USDT</span>
                 </p>
               )}
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500/12 text-brand-400">
               <ArrowUpFromLine className="h-5 w-5" aria-hidden />
             </div>
           </div>
           {summary && Number(summary.pending_withdrawals) > 0 && (
-            <div className="mt-4 flex items-center justify-between rounded-xl bg-white/10 px-4 py-3">
-              <span className="flex items-center gap-2 text-sm text-brand-100">
+            <div className="relative mt-4 flex items-center justify-between rounded-xl bg-surface-900/70 px-4 py-3">
+              <span className="flex items-center gap-2 text-sm text-surface-600">
                 <Lock className="h-4 w-4" aria-hidden />
                 Pending Withdrawals
               </span>
@@ -240,23 +241,23 @@ export function WithdrawPage() {
         )}
 
         {/* Withdrawal request form (hidden while ineligible) */}
-        <section aria-labelledby="request-heading" className="rounded-2xl border border-surface-200 bg-white p-5">
-          <h2 id="request-heading" className="mb-4 text-sm font-semibold text-surface-900">
+        <section aria-labelledby="request-heading" className="rounded-2xl border border-surface-200 bg-surface-50 p-5">
+          <h2 id="request-heading" className="mb-4 text-sm font-semibold text-surface-800">
             New Withdrawal Request
           </h2>
           {withdrawAllowed === false ? (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-              <p className="text-sm font-semibold text-amber-900">Withdrawal unavailable</p>
-              <p className="mt-1 text-sm leading-relaxed text-amber-800">
+            <div className="rounded-2xl border border-accent-500/25 bg-accent-500/10 p-5">
+              <p className="text-sm font-semibold text-accent-900">Withdrawal unavailable</p>
+              <p className="mt-1 text-sm leading-relaxed text-accent-800">
                 You must purchase at least VIP 1 to submit a withdrawal request.
               </p>
-              <p className="mt-1 text-sm leading-relaxed text-amber-800">
+              <p className="mt-1 text-sm leading-relaxed text-accent-800">
                 The Welcome Plan does not qualify for withdrawal eligibility.
               </p>
               <button
                 type="button"
                 onClick={() => navigate('/vip')}
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white shadow-glow transition-colors hover:bg-brand-400"
               >
                 <Crown className="h-4 w-4" aria-hidden />
                 View VIP Plans
@@ -322,7 +323,7 @@ export function WithdrawPage() {
                     setQrImage(event.target.files?.[0] ?? null);
                     event.target.value = '';
                   }}
-                  className="block w-full cursor-pointer rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+                  className="block w-full cursor-pointer rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm text-surface-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-500/12 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-400 hover:file:bg-brand-500/15"
                 />
                 {qrImage && (
                   <p className="mt-1.5 text-xs text-surface-500">
@@ -337,7 +338,7 @@ export function WithdrawPage() {
 
         {/* History */}
         <section aria-labelledby="history-heading">
-          <h2 id="history-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="history-heading" className="mb-3 text-sm font-semibold text-surface-800">
             Withdrawal History
           </h2>
           <WithdrawalHistory

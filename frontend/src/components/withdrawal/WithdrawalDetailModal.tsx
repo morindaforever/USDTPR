@@ -51,7 +51,7 @@ export function WithdrawalDetailModal({ withdrawal, isLoading = false, onClose }
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-bold tabular-nums text-surface-900">
+              <p className="text-2xl font-bold tabular-nums text-surface-800">
                 −{formatUsdt(withdrawal.amount)} USDT
               </p>
               <p className="mt-0.5 text-xs text-surface-500">
@@ -69,13 +69,13 @@ export function WithdrawalDetailModal({ withdrawal, isLoading = false, onClose }
               <dt className="text-xs font-medium uppercase tracking-wide text-surface-500">
                 Network
               </dt>
-              <dd className="mt-0.5 font-semibold text-surface-900">{withdrawal.network_name}</dd>
+              <dd className="mt-0.5 font-semibold text-surface-800">{withdrawal.network_name}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium uppercase tracking-wide text-surface-500">
                 Destination
               </dt>
-              <dd className="mt-0.5 break-all font-mono text-xs text-surface-900">
+              <dd className="mt-0.5 break-all font-mono text-xs text-surface-800">
                 {withdrawal.destination_address || withdrawal.masked_address}
               </dd>
             </div>
@@ -84,7 +84,7 @@ export function WithdrawalDetailModal({ withdrawal, isLoading = false, onClose }
                 <dt className="text-xs font-medium uppercase tracking-wide text-surface-500">
                   Transaction Reference
                 </dt>
-                <dd className="mt-0.5 break-all font-mono text-xs text-surface-900">
+                <dd className="mt-0.5 break-all font-mono text-xs text-surface-800">
                   {withdrawal.tx_hash}
                 </dd>
               </div>
@@ -94,7 +94,7 @@ export function WithdrawalDetailModal({ withdrawal, isLoading = false, onClose }
                 <dt className="text-xs font-medium uppercase tracking-wide text-surface-500">
                   Rejection Reason
                 </dt>
-                <dd className="mt-0.5 text-sm text-red-700">{withdrawal.rejection_reason}</dd>
+                <dd className="mt-0.5 text-sm text-danger-700">{withdrawal.rejection_reason}</dd>
               </div>
             )}
           </dl>
@@ -110,7 +110,7 @@ export function WithdrawalDetailModal({ withdrawal, isLoading = false, onClose }
               ).map((step) => (
                 <li key={step.key} className="flex items-center justify-between text-sm">
                   <span className="text-surface-600">{step.label}</span>
-                  <span className="tabular-nums text-surface-900">
+                  <span className="tabular-nums text-surface-800">
                     {formatDate(withdrawal[step.key] as string)}
                   </span>
                 </li>

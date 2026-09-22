@@ -34,15 +34,15 @@ export function RewardCountdown({ nextRewardAt }: RewardCountdownProps) {
   const { h, m, s } = parts(remaining);
 
   return (
-    <div className="mt-3 flex items-center justify-between rounded-xl bg-surface-50 px-3 py-2.5">
+    <div className="mt-3 flex items-center justify-between rounded-xl bg-surface-100 px-3 py-2.5">
       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-surface-600">
-        <Timer className="h-4 w-4 text-brand-600" aria-hidden />
+        <Timer className="h-4 w-4 text-brand-400" aria-hidden />
         Next reward
       </span>
       {remaining <= 0 ? (
-        <span className="text-sm font-semibold text-brand-700">Reward processing…</span>
+        <span className="text-sm font-semibold text-brand-400">Reward processing…</span>
       ) : (
-        <span className="font-mono text-sm font-semibold tabular-nums text-surface-900" aria-live="off">
+        <span className="font-mono text-sm font-semibold tabular-nums text-surface-800" aria-live="off">
           {h}h {m}m {s}s
         </span>
       )}

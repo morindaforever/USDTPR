@@ -21,7 +21,7 @@ export function EcosystemGrid() {
   return (
     <section aria-labelledby="ecosystem-heading">
       <div className="mb-3 flex items-center justify-between">
-        <h2 id="ecosystem-heading" className="text-sm font-semibold text-surface-900">
+        <h2 id="ecosystem-heading" className="text-sm font-semibold text-surface-800">
           Supported ecosystem
         </h2>
         <Badge tone="neutral">Compatible platforms</Badge>
@@ -30,11 +30,11 @@ export function EcosystemGrid() {
         {ECOSYSTEM.map((name) => (
           <li
             key={name}
-            className="flex items-center justify-center rounded-2xl border border-surface-200 bg-white px-3 py-4"
+            className="flex items-center justify-center rounded-2xl border border-surface-200 bg-surface-50 px-3 py-4"
           >
             <span
               aria-hidden
-              className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-surface-900 text-[10px] font-bold text-white"
+              className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-surface-900 text-[10px] font-bold text-surface-800"
             >
               {name.charAt(0)}
             </span>
@@ -42,7 +42,7 @@ export function EcosystemGrid() {
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-center text-[11px] text-surface-400">
+      <p className="mt-2 text-center text-[11px] text-surface-500">
         Independent platforms in the broader crypto ecosystem. No partnership or endorsement implied.
       </p>
     </section>

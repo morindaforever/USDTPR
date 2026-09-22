@@ -9,10 +9,10 @@ import { Logo } from '@/components/Logo';
 export function ErrorPage({ onReset }: { onReset?: () => void }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-surface-50 px-4 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-danger-50 text-danger-500">
         <WifiOff className="h-6 w-6" aria-hidden />
       </div>
-      <h1 className="mt-6 font-display text-xl font-bold text-surface-900">
+      <h1 className="mt-6 font-display text-xl font-bold text-surface-800">
         Something went wrong
       </h1>
       <p className="mt-1.5 max-w-sm text-sm text-surface-500">
@@ -28,7 +28,7 @@ export function ErrorPage({ onReset }: { onReset?: () => void }) {
         </Button>
         {onReset && <Button onClick={onReset}>Try again</Button>}
       </div>
-      <p className="mt-10 flex items-center gap-1.5 text-xs text-surface-400">
+      <p className="mt-10 flex items-center gap-1.5 text-xs text-surface-500">
         <Logo className="h-4 w-4" /> NexusUSDT
       </p>
     </div>

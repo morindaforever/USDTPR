@@ -57,10 +57,10 @@ export function TeamSummaryCard({ summary, isLoading, error, onRetry }: TeamSumm
           <div>
             <p className="text-xs font-medium uppercase tracking-wide text-surface-500">My Team</p>
             <div className="mt-1 flex items-center gap-2">
-              <p className="font-display text-lg font-bold text-surface-900">
+              <p className="font-display text-lg font-bold text-surface-800">
                 {summary.total_team} member{summary.total_team === 1 ? '' : 's'}
               </p>
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500/12 text-brand-400">
                 <Users className="h-4 w-4" aria-hidden />
               </span>
             </div>
@@ -68,21 +68,21 @@ export function TeamSummaryCard({ summary, isLoading, error, onRetry }: TeamSumm
         </div>
 
         <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl bg-surface-50 px-2 py-2.5">
+          <div className="rounded-xl bg-surface-900/50 px-2 py-2.5">
             <dt className="text-[11px] font-medium text-surface-500">Direct</dt>
-            <dd className="mt-0.5 text-sm font-semibold tabular-nums text-surface-900">
+            <dd className="mt-0.5 text-sm font-semibold tabular-nums text-surface-800">
               {summary.direct_referrals}
             </dd>
           </div>
-          <div className="rounded-xl bg-surface-50 px-2 py-2.5">
+          <div className="rounded-xl bg-surface-900/50 px-2 py-2.5">
             <dt className="text-[11px] font-medium text-surface-500">Total</dt>
-            <dd className="mt-0.5 text-sm font-semibold tabular-nums text-surface-900">
+            <dd className="mt-0.5 text-sm font-semibold tabular-nums text-surface-800">
               {summary.total_team}
             </dd>
           </div>
-          <div className="rounded-xl bg-surface-50 px-2 py-2.5">
+          <div className="rounded-xl bg-surface-900/50 px-2 py-2.5">
             <dt className="text-[11px] font-medium text-surface-500">Commission</dt>
-            <dd className="mt-0.5 text-sm font-semibold tabular-nums text-brand-700">
+            <dd className="mt-0.5 text-sm font-semibold tabular-nums text-brand-400">
               {formatUsdt(summary.commission_totals.total)}
             </dd>
           </div>
@@ -90,7 +90,7 @@ export function TeamSummaryCard({ summary, isLoading, error, onRetry }: TeamSumm
 
         <Link
           to="/team"
-          className="mt-4 block rounded-xl bg-brand-600 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+          className="mt-4 block rounded-xl bg-brand-500 px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-400"
         >
           View Team
         </Link>

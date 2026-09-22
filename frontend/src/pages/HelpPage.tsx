@@ -23,13 +23,13 @@ export function HelpPage() {
         {/* Personal support entry */}
         <Link
           to="/support"
-          className="flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50/60 p-4 transition-colors hover:bg-brand-50"
+          className="flex items-center gap-3 rounded-2xl border border-brand-500/25 bg-brand-50/60 p-4 transition-colors hover:bg-brand-500/10"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white">
             <LifeBuoy className="h-5 w-5" aria-hidden />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-surface-900">Need personal help?</p>
+            <p className="text-sm font-semibold text-surface-800">Need personal help?</p>
             <p className="text-xs text-surface-500">
               Open a support conversation and the team will reply in-app.
             </p>
@@ -41,12 +41,12 @@ export function HelpPage() {
           <section key={category.id} aria-labelledby={`faq-${category.id}`}>
             <h2
               id={`faq-${category.id}`}
-              className="mb-2.5 font-display text-base font-bold text-surface-900"
+              className="mb-2.5 font-display text-base font-bold text-surface-800"
             >
               {category.title}
             </h2>
             <Card>
-              <ul className="divide-y divide-surface-100">
+              <ul className="divide-y divide-surface-200">
                 {category.items.map((item, index) => {
                   const key = `${category.id}-${index}`;
                   const open = openKey === key;
@@ -61,7 +61,7 @@ export function HelpPage() {
                         <span className="text-sm font-medium text-surface-800">{item.question}</span>
                         <ChevronDown
                           className={cn(
-                            'h-4 w-4 shrink-0 text-surface-400 transition-transform',
+                            'h-4 w-4 shrink-0 text-surface-500 transition-transform',
                             open && 'rotate-180',
                           )}
                           aria-hidden

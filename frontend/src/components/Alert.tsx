@@ -18,10 +18,10 @@ export interface AlertProps {
 }
 
 const TONE_CONFIG: Record<AlertTone, { icon: LucideIcon; classes: string }> = {
-  info: { icon: Info, classes: 'bg-sky-50 text-sky-900 ring-sky-200' },
-  success: { icon: CheckCircle2, classes: 'bg-emerald-50 text-emerald-900 ring-emerald-200' },
-  warning: { icon: AlertTriangle, classes: 'bg-accent-50 text-accent-900 ring-accent-200' },
-  danger: { icon: XCircle, classes: 'bg-red-50 text-red-900 ring-red-200' },
+  info: { icon: Info, classes: 'bg-info-500/10 text-info-700 ring-info-500/25' },
+  success: { icon: CheckCircle2, classes: 'bg-brand-500/10 text-brand-400 ring-brand-500/25' },
+  warning: { icon: AlertTriangle, classes: 'bg-accent-500/10 text-accent-700 ring-accent-500/25' },
+  danger: { icon: XCircle, classes: 'bg-danger-500/10 text-danger-600 ring-danger-500/25' },
 };
 
 /** Inline feedback banner for form results, notices, and system messages. */

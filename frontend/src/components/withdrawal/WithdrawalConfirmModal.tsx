@@ -44,7 +44,7 @@ export function WithdrawalConfirmModal({
             <dt className="text-xs font-medium uppercase tracking-wide text-surface-500">
               Network
             </dt>
-            <dd className="mt-0.5 text-sm font-semibold text-surface-900">
+            <dd className="mt-0.5 text-sm font-semibold text-surface-800">
               {network ? `${network.name} (${network.code})` : '—'}
             </dd>
           </div>
@@ -52,7 +52,7 @@ export function WithdrawalConfirmModal({
             <dt className="text-xs font-medium uppercase tracking-wide text-surface-500">
               Destination
             </dt>
-            <dd className="mt-0.5 break-all font-mono text-xs font-medium text-surface-900">
+            <dd className="mt-0.5 break-all font-mono text-xs font-medium text-surface-800">
               {address}
             </dd>
           </div>
@@ -63,7 +63,7 @@ export function WithdrawalConfirmModal({
                   <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
                     Amount
                   </dt>
-                  <dd className="mt-0.5 text-sm font-semibold tabular-nums text-surface-900">
+                  <dd className="mt-0.5 text-sm font-semibold tabular-nums text-surface-800">
                     {formatUsdt(quote.amount)}
                   </dd>
                 </div>
@@ -71,7 +71,7 @@ export function WithdrawalConfirmModal({
                   <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
                     Fee
                   </dt>
-                  <dd className="mt-0.5 text-sm font-semibold tabular-nums text-surface-900">
+                  <dd className="mt-0.5 text-sm font-semibold tabular-nums text-surface-800">
                     {formatUsdt(quote.fee)}
                   </dd>
                 </div>
@@ -79,7 +79,7 @@ export function WithdrawalConfirmModal({
                   <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
                     You Receive
                   </dt>
-                  <dd className="mt-0.5 text-sm font-semibold tabular-nums text-brand-700">
+                  <dd className="mt-0.5 text-sm font-semibold tabular-nums text-brand-400">
                     {formatUsdt(quote.net_amount)}
                   </dd>
                 </div>
@@ -88,7 +88,7 @@ export function WithdrawalConfirmModal({
           )}
         </dl>
 
-        <div className="rounded-xl bg-sky-50 p-3 text-xs leading-relaxed text-sky-900 ring-1 ring-inset ring-sky-200">
+        <div className="rounded-xl bg-info-50 p-3 text-xs leading-relaxed text-info-900 ring-1 ring-inset ring-sky-200">
           You are requesting to withdraw{' '}
           <strong>{quote ? `${formatUsdt(quote.amount)} USDT` : '—'}</strong> on{' '}
           <strong>{network ? `${network.name} (${network.code})` : '—'}</strong> to:

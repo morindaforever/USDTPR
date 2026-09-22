@@ -101,17 +101,17 @@ export function AdminUserDetailPage() {
 
       {userQuery.isLoading ? (
         <div className="space-y-3">
-          <Skeleton className="h-40 w-full rounded-2xl bg-white/5" />
-          <Skeleton className="h-64 w-full rounded-2xl bg-white/5" />
+          <Skeleton className="h-40 w-full rounded-2xl bg-surface-200/40" />
+          <Skeleton className="h-64 w-full rounded-2xl bg-surface-200/40" />
         </div>
       ) : userQuery.error || !user ? (
-        <div className="rounded-2xl border border-white/10 bg-surface-900 p-6 text-center text-sm text-surface-300">
+        <div className="rounded-2xl border border-surface-200 bg-surface-50 p-6 text-center text-sm text-surface-300">
           {userQuery.error || 'User not found.'}
         </div>
       ) : (
         <div className="space-y-5">
           {/* Account (§14) */}
-          <section className="rounded-2xl border border-white/10 bg-surface-900 p-4">
+          <section className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-semibold text-white">Account</h2>
@@ -154,7 +154,7 @@ export function AdminUserDetailPage() {
           </section>
 
           {/* Wallet (§14) — backend-computed values only */}
-          <section className="rounded-2xl border border-white/10 bg-surface-900 p-4">
+          <section className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
             <h2 className="mb-3 text-sm font-semibold text-white">Wallet</h2>
             <div className="grid gap-3 text-sm sm:grid-cols-3 xl:grid-cols-6">
               {[
@@ -165,7 +165,7 @@ export function AdminUserDetailPage() {
                 ['Locked', user.wallet.locked_balance],
                 ['Bonus', user.wallet.bonus_balance],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-white/5 p-3">
+                <div key={label} className="rounded-xl bg-surface-200/40 p-3">
                   <p className="text-[11px] uppercase tracking-wide text-surface-500">{label}</p>
                   <p className="mt-0.5 font-semibold tabular-nums text-white">{formatUsdt(value)} USDT</p>
                 </div>
@@ -177,7 +177,7 @@ export function AdminUserDetailPage() {
           </section>
 
           {/* History tabs (§14) */}
-          <section className="rounded-2xl border border-white/10 bg-surface-900 p-4">
+          <section className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
             <div className="mb-3 flex flex-wrap gap-1.5">
               {TABS.map((item) => (
                 <button
@@ -187,7 +187,7 @@ export function AdminUserDetailPage() {
                   className={
                     tab === item.key
                       ? 'rounded-full bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white'
-                      : 'rounded-full bg-white/5 px-3 py-1.5 text-xs font-semibold text-surface-300 hover:bg-white/10'
+                      : 'rounded-full bg-surface-200/40 px-3 py-1.5 text-xs font-semibold text-surface-300 hover:bg-surface-300/60'
                   }
                 >
                   {item.label}
@@ -197,7 +197,7 @@ export function AdminUserDetailPage() {
             {historyQuery.isLoading ? (
               <div className="space-y-2">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-10 animate-pulse rounded-xl bg-white/5" />
+                  <div key={i} className="h-10 animate-pulse rounded-xl bg-surface-200/40" />
                 ))}
               </div>
             ) : (historyQuery.data ?? []).length === 0 ? (
@@ -240,7 +240,7 @@ export function AdminUserDetailPage() {
                   rows={3}
                   maxLength={500}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full resize-none rounded-xl border border-white/10 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
+                  className="w-full resize-none rounded-xl border border-surface-200 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
                 />
               </div>
             )}

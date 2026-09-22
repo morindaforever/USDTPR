@@ -71,20 +71,20 @@ export function WithdrawalForm({
             disabled={!network}
             onChange={(event) => onAddressChange(event.target.value)}
             placeholder={network?.address_hint || 'Select a network first'}
-            className="w-full rounded-xl border border-surface-200 bg-white px-4 py-3 pr-20 text-sm text-surface-900 placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-surface-50 disabled:text-surface-400"
+            className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 pr-20 text-sm text-surface-800 placeholder:text-surface-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-surface-50 disabled:text-surface-400"
           />
           <button
             type="button"
             onClick={() => void paste()}
             disabled={!network}
-            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-lg bg-surface-100 px-2.5 py-1.5 text-xs font-semibold text-surface-600 transition-colors hover:bg-surface-200 disabled:opacity-50"
+            className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-lg bg-surface-100 px-2.5 py-1.5 text-xs font-semibold text-surface-600 transition-colors hover:bg-surface-300 disabled:opacity-50"
           >
             <ClipboardPaste className="h-3.5 w-3.5" aria-hidden />
             Paste
           </button>
         </div>
         {addressError ? (
-          <p className="mt-1.5 text-xs text-red-600">{addressError}</p>
+          <p className="mt-1.5 text-xs text-danger-600">{addressError}</p>
         ) : (
           <p className="mt-1.5 text-xs text-surface-400">
             Format validation only — {network?.name ?? 'the network'} address is not verified
@@ -103,7 +103,7 @@ export function WithdrawalForm({
             type="button"
             onClick={onMax}
             disabled={!summary || Number(summary.withdrawable_balance) <= 0}
-            className="rounded-lg bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-100 disabled:opacity-50"
+            className="rounded-lg bg-brand-500/12 px-2.5 py-1 text-xs font-semibold text-brand-400 transition-colors hover:bg-brand-500/20 disabled:opacity-50"
           >
             Max
           </button>
@@ -118,14 +118,14 @@ export function WithdrawalForm({
             disabled={!network}
             onChange={(event) => onAmountChange(event.target.value)}
             placeholder="0.00"
-            className="w-full rounded-xl border border-surface-200 bg-white px-4 py-3 pr-16 text-sm font-semibold tabular-nums text-surface-900 placeholder:font-normal placeholder:text-surface-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-surface-50 disabled:text-surface-400"
+            className="w-full rounded-xl border border-surface-200 bg-surface-50 px-4 py-3 pr-16 text-sm font-semibold tabular-nums text-surface-800 placeholder:font-normal placeholder:text-surface-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:bg-surface-50 disabled:text-surface-400"
           />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-surface-400">
             USDT
           </span>
         </div>
         {amountError ? (
-          <p className="mt-1.5 text-xs text-red-600">{amountError}</p>
+          <p className="mt-1.5 text-xs text-danger-600">{amountError}</p>
         ) : (
           <p className="mt-1.5 text-xs text-surface-400">
             Minimum withdrawal:{' '}
@@ -136,22 +136,22 @@ export function WithdrawalForm({
 
       {/* Fee / net summary — backend-quoted (§14–15) */}
       {quote && (
-        <dl className="space-y-2 rounded-xl bg-surface-50 p-4 text-sm">
+        <dl className="space-y-2 rounded-xl border border-surface-200 bg-surface-900/60 p-4 text-sm">
           <div className="flex items-center justify-between">
             <dt className="text-surface-500">Amount</dt>
-            <dd className="font-medium tabular-nums text-surface-900">
+            <dd className="font-medium tabular-nums text-surface-800">
               {formatUsdt(quote.amount)} USDT
             </dd>
           </div>
           <div className="flex items-center justify-between">
             <dt className="text-surface-500">Network Fee</dt>
-            <dd className="font-medium tabular-nums text-surface-900">
+            <dd className="font-medium tabular-nums text-surface-800">
               {formatUsdt(quote.fee)} USDT
             </dd>
           </div>
           <div className="flex items-center justify-between border-t border-surface-200 pt-2">
-            <dt className="font-semibold text-surface-900">You Receive</dt>
-            <dd className="font-semibold tabular-nums text-brand-700">
+            <dt className="font-semibold text-surface-800">You Receive</dt>
+            <dd className="font-semibold tabular-nums text-brand-400">
               {formatUsdt(quote.net_amount)} USDT
             </dd>
           </div>

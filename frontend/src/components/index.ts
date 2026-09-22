@@ -13,6 +13,8 @@ export { Input, type InputProps } from './Input';
 export { MaintenanceBanner } from './MaintenanceBanner';
 export { Modal, type ModalProps } from './Modal';
 export { Spinner } from './Spinner';
+export { TelegramIcon } from './TelegramIcon';
+export { TelegramCommunityCard } from './TelegramCommunityCard';
 export { Alert, type AlertProps } from './Alert';
 export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { ErrorState, type ErrorStateProps } from './ErrorState';

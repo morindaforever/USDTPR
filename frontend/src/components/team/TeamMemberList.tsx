@@ -2,9 +2,9 @@ import { formatDate } from '@/utils/format';
 import type { TeamMember } from '@/types';
 
 const STATUS_TONES: Record<TeamMember['status'], string> = {
-  ACTIVE: 'bg-brand-50 text-brand-700 ring-brand-200',
-  SUSPENDED: 'bg-amber-50 text-amber-700 ring-amber-200',
-  BANNED: 'bg-red-50 text-red-700 ring-red-200',
+  ACTIVE: 'bg-brand-500/12 text-brand-400 ring-brand-500/30',
+  SUSPENDED: 'bg-accent-500/12 text-accent-600 ring-accent-500/30',
+  BANNED: 'bg-danger-500/12 text-danger-600 ring-danger-500/30',
 };
 
 /**
@@ -24,10 +24,10 @@ export function TeamMemberList({ members }: { members: TeamMember[] }) {
       {members.map((member) => (
         <li
           key={member.user_id}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-surface-200 bg-white p-4"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-surface-200 bg-surface-50 p-4"
         >
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-surface-900">
+            <p className="truncate text-sm font-semibold text-surface-800">
               {member.full_name || 'Member'}
               <span className="ml-2 font-mono text-[11px] font-normal text-surface-400">
                 {member.user_id}

@@ -4,46 +4,69 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary brand — deep teal/green tuned for a fintech/crypto feel.
+        // Primary brand — USDT/emerald, used sparingly: actions, positives,
+        // active states, progress. NOT a background wash for the whole UI.
         brand: {
-          50: '#eefbf4',
-          100: '#d6f5e4',
-          200: '#b0eacf',
-          300: '#7bd8b3',
-          400: '#46c096',
-          500: '#23a67d',
-          600: '#158565',
-          700: '#126b53',
-          800: '#115544',
-          900: '#0f4639',
-          950: '#04281f',
+          50: '#ecfdf3',
+          100: '#d1fadf',
+          200: '#a6f4c5',
+          300: '#6ce9a6',
+          400: '#32d583',
+          500: '#12b76a',
+          600: '#0e9f5f',
+          700: '#0c7c4b',
+          800: '#0a5f3b',
+          900: '#07452c',
+          950: '#032e1e',
         },
-        // Accent — gold/amber for VIP and rewards touches.
+        // Accent — muted gold for VIP/reward touches only.
         accent: {
-          50: '#fffaeb',
-          100: '#fef0c7',
-          200: '#fedf89',
-          300: '#fec84b',
-          400: '#fdb022',
-          500: '#f79009',
-          600: '#dc6803',
-          700: '#b54708',
-          800: '#93370d',
-          900: '#7a2e0e',
+          50: '#1c1508',
+          100: '#28201060', // unused in dark; kept for compat
+          200: '#3c2f10',
+          300: '#5c4a1a',
+          400: '#8a6d1f',
+          500: '#c99a2c',
+          600: '#e3b341',
+          700: '#f0c75e',
+          800: '#f5d98c',
+          900: '#faecc4',
         },
-        // Dark surfaces for the dashboard shell.
+        // Dark surface scale — the backbone of the whole redesign. Every
+        // component inherits by referencing these tokens, never hex values.
         surface: {
-          50: '#f6f8fa',
-          100: '#eceff3',
-          200: '#d5dbe2',
-          300: '#b1bdc8',
-          400: '#8796a5',
-          500: '#68798c',
-          600: '#536273',
-          700: '#45505e',
-          800: '#3c4550',
-          900: '#0d1520',
-          950: '#080e15',
+          50: '#141B24', // elevated (cards in dark: lowest usage)
+          100: '#10161e', // slightly elevated input/track
+          200: '#1b232e', // borders on cards
+          300: '#2a3542', // strong borders / dividers
+          400: '#46566b', // icons, faint text
+          500: '#64748b', // secondary text
+          600: '#8b9bb0', // body text muted-strong
+          700: '#b6c2d1', // primary text on cards
+          800: '#dde5ee', // bright text
+          900: '#0B1016', // secondary background
+          950: '#07090D', // primary background
+        },
+        // Status hues (dark-tuned).
+        danger: {
+          50: '#2a1215',
+          100: '#3d1a1e',
+          300: '#7f2d33',
+          400: '#b3424a',
+          500: '#e5484d',
+          600: '#ec5d62',
+          700: '#ff8589',
+          900: '#ffd1d3',
+        },
+        info: {
+          50: '#0f1c2e',
+          100: '#15263c',
+          300: '#1e4a70',
+          400: '#2a6ea6',
+          500: '#3b8fd4',
+          600: '#5aa8e6',
+          700: '#86c4f0',
+          900: '#c9e8fb',
         },
       },
       fontFamily: {
@@ -62,9 +85,14 @@ export default {
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       boxShadow: {
-        card: '0 1px 2px 0 rgb(13 21 32 / 0.05), 0 1px 3px 0 rgb(13 21 32 / 0.08)',
-        'card-hover': '0 4px 6px -1px rgb(13 21 32 / 0.08), 0 10px 24px -4px rgb(13 21 32 / 0.12)',
-        glow: '0 0 0 1px rgb(35 166 125 / 0.25), 0 4px 24px rgb(35 166 125 / 0.25)',
+        // Depth via elevation + ring, not glow. Subtle borders do the work.
+        card: '0 1px 2px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(255 255 255 / 0.04)',
+        'card-hover': '0 8px 24px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.06)',
+        glow: '0 0 0 1px rgb(18 183 106 / 0.35), 0 4px 24px rgb(18 183 106 / 0.12)',
+        none: 'none',
+      },
+      borderColor: {
+        DEFAULT: '#1b232e',
       },
       keyframes: {
         'fade-in': {
@@ -84,9 +112,9 @@ export default {
         },
       },
       animation: {
-        'fade-in': 'fade-in 0.25s ease-out both',
-        'fade-in-up': 'fade-in-up 0.35s ease-out both',
-        'scale-in': 'scale-in 0.18s ease-out both',
+        'fade-in': 'fade-in 0.2s ease-out both',
+        'fade-in-up': 'fade-in-up 0.3s ease-out both',
+        'scale-in': 'scale-in 0.16s ease-out both',
       },
     },
   },

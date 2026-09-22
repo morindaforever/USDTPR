@@ -74,12 +74,12 @@ export default function AdminLayout() {
   return (
     <div className="min-h-dvh bg-surface-950 text-surface-100">
       {/* Admin header (§6) */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-surface-900/90 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-surface-50/90 backdrop-blur">
         <div className="flex h-14 items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-3">
             <button
               type="button"
-              className="rounded-lg p-2 text-surface-300 hover:bg-white/10 lg:hidden"
+              className="rounded-lg p-2 text-surface-300 hover:bg-surface-200/40 lg:hidden"
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation"
             >
@@ -99,14 +99,14 @@ export default function AdminLayout() {
             <button
               type="button"
               onClick={() => navigate('/home')}
-              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-surface-300 hover:bg-white/10"
+              className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-surface-300 hover:bg-surface-200/40"
             >
               User site
             </button>
             <button
               type="button"
               onClick={() => void handleLogout()}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-xs font-semibold text-surface-200 hover:bg-white/10"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-surface-200/40 px-3 py-1.5 text-xs font-semibold text-surface-200 hover:bg-surface-200/40"
             >
               <LogOut className="h-3.5 w-3.5" aria-hidden />
               Logout
@@ -117,7 +117,7 @@ export default function AdminLayout() {
 
       <div className="flex">
         {/* Desktop sidebar (§5) */}
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-white/10 bg-surface-900/60 lg:block">
+        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-white/10 bg-surface-50/60 lg:block">
           <nav className="space-y-0.5 p-3" aria-label="Admin sections">
             {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
               <NavLink
@@ -128,8 +128,8 @@ export default function AdminLayout() {
                   cn(
                     'flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-brand-600/20 text-brand-300'
-                      : 'text-surface-300 hover:bg-white/5 hover:text-white',
+                      ? 'bg-brand-500/15 text-brand-400'
+                      : 'text-surface-300 hover:bg-surface-200/40 hover:text-white',
                   )
                 }
               >
@@ -146,16 +146,16 @@ export default function AdminLayout() {
             <button
               type="button"
               aria-label="Close navigation"
-              className="absolute inset-0 bg-surface-950/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setDrawerOpen(false)}
             />
-            <div className="relative h-full w-64 overflow-y-auto border-r border-white/10 bg-surface-900 p-3">
+            <div className="relative h-full w-64 overflow-y-auto border-r border-white/10 bg-surface-50 p-3">
               <div className="mb-3 flex items-center justify-between px-2">
                 <span className="text-sm font-bold text-white">Admin</span>
                 <button
                   type="button"
                   onClick={() => setDrawerOpen(false)}
-                  className="rounded-lg p-1.5 text-surface-400 hover:bg-white/10"
+                  className="rounded-lg p-1.5 text-surface-400 hover:bg-surface-200/40"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
@@ -171,7 +171,7 @@ export default function AdminLayout() {
                     className={({ isActive }) =>
                       cn(
                         'flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium',
-                        isActive ? 'bg-brand-600/20 text-brand-300' : 'text-surface-300 hover:bg-white/5',
+                        isActive ? 'bg-brand-500/15 text-brand-400' : 'text-surface-300 hover:bg-surface-200/40',
                       )
                     }
                   >

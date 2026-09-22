@@ -28,7 +28,7 @@ const BADGE_TONES: Record<string, string> = {
   IN_PROGRESS: 'bg-sky-500/15 text-sky-300 ring-sky-500/30',
   OPEN: 'bg-emerald-500/15 text-emerald-300 ring-emerald-500/30',
   RESOLVED: 'bg-sky-500/15 text-sky-300 ring-sky-500/30',
-  CLOSED: 'bg-white/5 text-surface-400 ring-white/10',
+  CLOSED: 'bg-surface-200/40 text-surface-400 ring-white/10',
 };
 
 /** Status pill used across every admin list. */
@@ -37,7 +37,7 @@ export function AdminStatusBadge({ status }: { status: string }) {
     <span
       className={cn(
         'inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset',
-        BADGE_TONES[status] ?? 'bg-white/5 text-surface-300 ring-white/10',
+        BADGE_TONES[status] ?? 'bg-surface-200/40 text-surface-300 ring-white/10',
       )}
     >
       {status.replace(/_/g, ' ').toLowerCase()}
@@ -60,7 +60,7 @@ export function AdminStatCard({ label, value, hint, tone = 'default' }: {
           ? 'border-amber-500/30 bg-amber-500/5'
           : tone === 'brand'
             ? 'border-brand-500/30 bg-brand-500/5'
-            : 'border-white/10 bg-surface-900',
+            : 'border-surface-200 bg-surface-50',
       )}
     >
       <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-400">{label}</p>
@@ -87,7 +87,7 @@ export function AdminFilterChips<T extends string>({ options, value, onChange }:
             'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
             value === option.key
               ? 'bg-brand-600 text-white'
-              : 'bg-white/5 text-surface-300 hover:bg-white/10',
+              : 'bg-surface-200/40 text-surface-300 hover:bg-surface-300/60',
           )}
         >
           {option.label}

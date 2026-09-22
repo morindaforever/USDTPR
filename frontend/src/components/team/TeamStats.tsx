@@ -12,33 +12,33 @@ export function TeamStats({ summary }: TeamStatsProps) {
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl border border-surface-200 bg-white p-4 text-center">
+        <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4 text-center">
           <p className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
             Direct
           </p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-surface-900">
+          <p className="mt-1 text-xl font-bold tabular-nums text-surface-800">
             {summary.direct_referrals}
           </p>
         </div>
-        <div className="rounded-2xl border border-surface-200 bg-white p-4 text-center">
+        <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4 text-center">
           <p className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
             Total Team
           </p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-surface-900">
+          <p className="mt-1 text-xl font-bold tabular-nums text-surface-800">
             {summary.total_team}
           </p>
         </div>
-        <div className="rounded-2xl border border-surface-200 bg-white p-4 text-center">
+        <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4 text-center">
           <p className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
             Active
           </p>
-          <p className="mt-1 text-xl font-bold tabular-nums text-brand-700">
+          <p className="mt-1 text-xl font-bold tabular-nums text-brand-400">
             {summary.active_team}
           </p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-surface-200 bg-white p-4">
+      <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
         <p className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
           Team by level
         </p>
@@ -46,7 +46,7 @@ export function TeamStats({ summary }: TeamStatsProps) {
           {levels.map((level) => (
             <span
               key={level}
-              className="rounded-full bg-surface-50 px-3 py-1 text-xs font-semibold text-surface-700 ring-1 ring-inset ring-surface-200"
+              className="rounded-full bg-surface-100 px-3 py-1 text-xs font-semibold text-surface-700 ring-1 ring-inset ring-surface-300"
             >
               Level {level}: {summary.level_counts[String(level)] ?? 0}
             </span>
@@ -54,10 +54,10 @@ export function TeamStats({ summary }: TeamStatsProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-brand-200 bg-white p-4">
+      <div className="rounded-2xl border border-brand-500/25 bg-brand-950/15 p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-surface-900">Total Commission</p>
-          <p className="text-lg font-bold tabular-nums text-brand-700">
+          <p className="text-sm font-semibold text-surface-800">Total Commission</p>
+          <p className="text-lg font-bold tabular-nums text-brand-400">
             {formatUsdt(summary.commission_totals.total)} USDT
           </p>
         </div>

@@ -137,7 +137,7 @@ export function AdminDepositAddressesPage() {
           <button
             type="button"
             onClick={() => void copyAddress(row)}
-            className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-white/10 hover:text-white"
+            className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-300/60 hover:text-white"
             aria-label="Copy full address"
           >
             {copied === row.id ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
@@ -212,14 +212,14 @@ export function AdminDepositAddressesPage() {
         <div className="space-y-3">
           {editing?.mode === 'create' ? (
             <div className="flex w-full flex-col gap-1.5">
-              <label htmlFor="deposit-address-network" className="text-sm font-medium text-surface-900">
+              <label htmlFor="deposit-address-network" className="text-sm font-medium text-surface-800">
                 Network
               </label>
               <select
                 id="deposit-address-network"
                 value={form.network}
                 onChange={(e) => setForm((f) => ({ ...f, network: e.target.value }))}
-                className="h-11 w-full rounded-xl border border-surface-200 bg-white px-3.5 text-sm text-surface-900 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                className="h-11 w-full rounded-xl border border-surface-200 bg-surface-100 px-3.5 text-sm text-surface-800 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
               >
                 {selectableNetworks.length === 0 && <option value="">No networks available</option>}
                 {selectableNetworks.map((network: AdminNetworkRow) => (
@@ -231,7 +231,7 @@ export function AdminDepositAddressesPage() {
             </div>
           ) : (
             <div className="rounded-xl bg-surface-50 px-3.5 py-2.5 text-sm text-surface-700">
-              Network: <span className="font-semibold text-surface-900">{editing?.row?.network}</span> ({editing?.row?.network_name})
+              Network: <span className="font-semibold text-surface-800">{editing?.row?.network}</span> ({editing?.row?.network_name})
             </div>
           )}
 
@@ -248,7 +248,7 @@ export function AdminDepositAddressesPage() {
           />
 
           <div className="rounded-xl bg-surface-50 px-3.5 py-2.5 text-sm text-surface-700">
-            Asset: <span className="font-semibold text-surface-900">USDT</span>
+            Asset: <span className="font-semibold text-surface-800">USDT</span>
           </div>
 
           {rotationTarget && (

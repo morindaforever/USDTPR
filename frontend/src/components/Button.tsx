@@ -15,21 +15,21 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
-    'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800 focus-visible:ring-brand-500',
+    'bg-brand-500 text-white shadow-glow hover:bg-brand-400 active:bg-brand-600 focus-visible:ring-brand-400',
   secondary:
-    'bg-surface-100 text-surface-900 hover:bg-surface-200 active:bg-surface-300 focus-visible:ring-surface-400',
+    'bg-surface-200 text-surface-800 hover:bg-surface-300 active:bg-surface-300/80 focus-visible:ring-surface-400',
   outline:
-    'border border-surface-200 bg-white text-surface-900 hover:border-brand-300 hover:bg-brand-50 focus-visible:ring-brand-500',
+    'border border-surface-300 bg-transparent text-surface-800 hover:border-brand-500/40 hover:bg-brand-500/10 focus-visible:ring-brand-400',
   ghost:
-    'bg-transparent text-surface-700 hover:bg-surface-100 active:bg-surface-200 focus-visible:ring-surface-400',
+    'bg-transparent text-surface-600 hover:bg-surface-200 hover:text-surface-800 focus-visible:ring-surface-400',
   danger:
-    'bg-red-600 text-white shadow-sm hover:bg-red-700 active:bg-red-800 focus-visible:ring-red-500',
+    'bg-danger-500 text-white hover:bg-danger-600 active:bg-danger-700 focus-visible:ring-danger-400',
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: 'h-9 px-3 text-sm gap-1.5',
-  md: 'h-11 px-4 text-sm gap-2',
-  lg: 'h-12 px-6 text-base gap-2',
+  sm: 'h-9 px-3 text-sm gap-1.5 rounded-lg',
+  md: 'h-11 px-4 text-sm gap-2 rounded-xl',
+  lg: 'h-12 px-6 text-base gap-2 rounded-xl',
 };
 
 /** Primary interactive control for the whole design system. */
@@ -47,9 +47,9 @@ export function Button({
   return (
     <button
       className={cn(
-        'inline-flex items-center justify-center rounded-xl font-semibold transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-        'disabled:pointer-events-none disabled:opacity-50',
+        'inline-flex items-center justify-center font-semibold transition-colors duration-150',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-950',
+        'disabled:pointer-events-none disabled:opacity-45',
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
         fullWidth && 'w-full',

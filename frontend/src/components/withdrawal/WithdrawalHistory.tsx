@@ -43,17 +43,17 @@ export function WithdrawalHistory({ withdrawals, isLoading = false, onSelect }: 
   }
 
   return (
-    <ul className="divide-y divide-surface-100 overflow-hidden rounded-2xl border border-surface-200 bg-white">
+    <ul className="divide-y divide-surface-200 overflow-hidden rounded-2xl border border-surface-200 bg-surface-50">
       {withdrawals.map((withdrawal) => (
         <li key={withdrawal.withdrawal_id}>
           <button
             type="button"
             onClick={() => onSelect(withdrawal.withdrawal_id)}
-            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-50"
+            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-100"
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-surface-900">
+                <span className="text-sm font-semibold text-surface-800">
                   −{formatUsdt(withdrawal.amount)} USDT
                 </span>
                 <Badge tone={withdrawalStatusTone(withdrawal.status)}>

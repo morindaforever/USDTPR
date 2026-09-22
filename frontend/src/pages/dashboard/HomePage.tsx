@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { MaintenanceBanner, PageContainer } from '@/components';
+import { MaintenanceBanner, PageContainer, TelegramCommunityCard } from '@/components';
 import { useDashboardData } from '@/hooks';
 import { useAuth } from '@/context/AuthContext';
 import { walletService, vipService, referralService } from '@/services';
@@ -64,6 +64,9 @@ export function HomePage() {
 
         <QuickActions />
 
+        {/* Community — official Telegram channel (opens in a new tab). */}
+        <TelegramCommunityCard />
+
         {/* §28: recent wallet ledger + notifications, latest 5, with links. */}
         <div className="grid gap-6 xl:grid-cols-2">
           <RecentTransactions />
@@ -82,10 +85,10 @@ export function HomePage() {
 
         {/* About / information */}
         <section aria-labelledby="about-heading">
-          <h2 id="about-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="about-heading" className="mb-3 text-sm font-semibold text-surface-800">
             About the platform
           </h2>
-          <div className="rounded-2xl border border-surface-200 bg-white p-5">
+          <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5">
             <p className="text-sm leading-relaxed text-surface-600">
               Manage your account, view available platform features, track your balance, and
               review your activity from one dashboard. This is a development build — financial

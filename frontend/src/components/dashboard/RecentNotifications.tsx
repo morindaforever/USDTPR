@@ -24,10 +24,10 @@ export function RecentNotifications() {
     <Card>
       <div className="p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-surface-900">Recent Notifications</h2>
+          <h2 className="text-sm font-semibold text-surface-800">Recent Notifications</h2>
           <Link
             to="/notifications"
-            className="inline-flex items-center gap-0.5 text-xs font-semibold text-brand-700 hover:text-brand-800"
+            className="inline-flex items-center gap-0.5 text-xs font-semibold text-brand-400 hover:text-brand-300"
           >
             View All
             <ChevronRight className="h-3.5 w-3.5" aria-hidden />
@@ -55,14 +55,14 @@ export function RecentNotifications() {
             You're all caught up — no notifications to show.
           </p>
         ) : (
-          <ul className="mt-4 divide-y divide-surface-100">
+          <ul className="mt-4 divide-y divide-surface-200">
             {rows.map((row) => (
               <li key={row.id} className="flex items-start gap-3 py-2.5">
                 <span
                   className={
                     row.is_read
                       ? 'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface-100 text-surface-500'
-                      : 'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600'
+                      : 'mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-500/12 text-brand-400'
                   }
                 >
                   <Bell className="h-3.5 w-3.5" aria-hidden />
@@ -72,12 +72,12 @@ export function RecentNotifications() {
                     className={
                       row.is_read
                         ? 'truncate text-sm text-surface-700'
-                        : 'truncate text-sm font-semibold text-surface-900'
+                        : 'truncate text-sm font-semibold text-surface-800'
                     }
                   >
                     {row.title}
                   </p>
-                  <p className="text-[11px] text-surface-400">{formatDateTime(row.created_at)}</p>
+                  <p className="text-[11px] text-surface-500">{formatDateTime(row.created_at)}</p>
                 </div>
                 {!row.is_read && (
                   <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent-500" aria-label="Unread" />

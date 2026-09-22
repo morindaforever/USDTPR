@@ -16,10 +16,10 @@ const STATUS_LABELS: Record<SupportConversationDetail['status'], string> = {
 };
 
 const STATUS_TONES: Record<SupportConversationDetail['status'], string> = {
-  OPEN: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  IN_PROGRESS: 'bg-amber-50 text-amber-700 ring-amber-200',
-  RESOLVED: 'bg-sky-50 text-sky-700 ring-sky-200',
-  CLOSED: 'bg-surface-100 text-surface-600 ring-surface-200',
+  OPEN: 'bg-brand-500/10 text-brand-400 ring-emerald-200',
+  IN_PROGRESS: 'bg-accent-500/10 text-accent-700 ring-amber-200',
+  RESOLVED: 'bg-info-50 text-info-700 ring-sky-200',
+  CLOSED: 'bg-surface-100 text-surface-600 ring-surface-300',
 };
 
 /**
@@ -117,8 +117,8 @@ export function SupportConversationPage() {
   if (loadError || !conversation) {
     return (
       <PageContainer title="Conversation">
-        <div className="rounded-2xl border border-surface-200 bg-white p-6 text-center">
-          <AlertTriangle className="mx-auto h-8 w-8 text-amber-500" aria-hidden />
+        <div className="rounded-2xl border border-surface-200 bg-surface-50 p-6 text-center">
+          <AlertTriangle className="mx-auto h-8 w-8 text-accent-600" aria-hidden />
           <p className="mt-3 text-sm text-surface-600">{loadError || 'Conversation not found.'}</p>
           <div className="mt-4 flex justify-center gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate('/support')}>Back to Support</Button>
@@ -134,7 +134,7 @@ export function SupportConversationPage() {
   return (
     <PageContainer title="Conversation" subtitle={conversation.subject}>
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200 bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-surface-200 bg-surface-50 p-4">
           <div className="min-w-0">
             <p className="font-mono text-[11px] text-surface-400">{conversation.conversation_id}</p>
             <p className="mt-0.5 text-xs text-surface-500">
@@ -160,7 +160,7 @@ export function SupportConversationPage() {
         </ul>
 
         {sendError && (
-          <p className="rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700" role="alert">
+          <p className="rounded-xl bg-danger-50 px-3 py-2 text-xs text-danger-700" role="alert">
             {sendError}
           </p>
         )}
@@ -183,7 +183,7 @@ export function SupportConversationPage() {
             </Button>
           </div>
         ) : (
-          <div className="rounded-2xl border border-surface-200 bg-white p-4">
+          <div className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
             <label htmlFor="reply-message" className="mb-2 block text-xs font-medium text-surface-600">
               Reply
             </label>
@@ -221,7 +221,7 @@ export function SupportConversationPage() {
         <button
           type="button"
           onClick={() => navigate('/support')}
-          className="w-full text-center text-xs font-semibold text-surface-500 hover:text-brand-600"
+          className="w-full text-center text-xs font-semibold text-surface-500 hover:text-brand-400"
         >
           ← Back to all conversations
         </button>
@@ -238,8 +238,8 @@ function MessageBubble({ message }: { message: SupportMessage }) {
         className={cn(
           'max-w-[85%] rounded-2xl px-4 py-3 sm:max-w-[70%]',
           isSupport
-            ? 'rounded-tl-sm bg-surface-100 text-surface-900'
-            : 'rounded-tr-sm bg-brand-600 text-white',
+            ? 'rounded-tl-sm bg-surface-100 text-surface-800'
+            : 'rounded-tr-sm bg-brand-600 text-surface-800',
         )}
       >
         <p className="text-[11px] font-semibold uppercase tracking-wide opacity-70">

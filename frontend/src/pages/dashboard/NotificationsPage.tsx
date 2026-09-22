@@ -92,7 +92,7 @@ export function NotificationsPage() {
             type="button"
             onClick={() => void markAllRead()}
             disabled={markingAll || (data?.unread ?? 0) === 0}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <CheckCheck className="h-4 w-4" aria-hidden />
             Mark all read
@@ -107,7 +107,7 @@ export function NotificationsPage() {
           ) : !data || data.rows.length === 0 ? (
             <NotificationEmptyState />
           ) : (
-            <ul className="divide-y divide-surface-100">
+            <ul className="divide-y divide-surface-200">
               {data.rows.map((row) => (
                 <NotificationItem
                   key={row.id}
@@ -120,12 +120,12 @@ export function NotificationsPage() {
           )}
 
           {pagination && pagination.pages > 1 && !isLoading && !error && (
-            <div className="flex items-center justify-between border-t border-surface-100 px-4 py-3">
+            <div className="flex items-center justify-between border-t border-surface-200 px-4 py-3">
               <button
                 type="button"
                 disabled={pagination.page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="inline-flex items-center gap-1 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
                 Prev
@@ -137,7 +137,7 @@ export function NotificationsPage() {
                 type="button"
                 disabled={pagination.page >= pagination.pages}
                 onClick={() => setPage((p) => p + 1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
                 <ChevronRight className="h-3.5 w-3.5" aria-hidden />

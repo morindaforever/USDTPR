@@ -188,7 +188,7 @@ export function AdminWithdrawalsPage() {
       >
         {action && (
           <div className="space-y-4">
-            <dl className="space-y-1.5 rounded-xl bg-white/5 p-3 text-sm">
+            <dl className="space-y-1.5 rounded-xl bg-surface-200/40 p-3 text-sm">
               <div className="flex justify-between"><dt className="text-surface-400">Withdrawal</dt><dd className="font-mono text-xs">{action.row.withdrawal_id}</dd></div>
               <div className="flex justify-between"><dt className="text-surface-400">User</dt><dd>{action.row.user_id}</dd></div>
               <div className="flex justify-between"><dt className="text-surface-400">Requested</dt><dd className="tabular-nums">{formatUsdt(action.row.amount)} USDT</dd></div>
@@ -207,7 +207,7 @@ export function AdminWithdrawalsPage() {
                   value={txHash}
                   onChange={(e) => setTxHash(e.target.value)}
                   maxLength={128}
-                  className="w-full rounded-xl border border-white/10 bg-surface-950 px-3 py-2.5 font-mono text-xs text-surface-100 focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-200 bg-surface-950 px-3 py-2.5 font-mono text-xs text-surface-100 focus:border-brand-500 focus:outline-none"
                 />
               </div>
             )}
@@ -221,7 +221,7 @@ export function AdminWithdrawalsPage() {
                   rows={3}
                   maxLength={500}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full resize-none rounded-xl border border-white/10 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
+                  className="w-full resize-none rounded-xl border border-surface-200 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
                 />
               </div>
             )}
@@ -289,10 +289,10 @@ export function AdminWithdrawalsPage() {
                   <img
                     src={qrUrl}
                     alt="User-uploaded destination QR"
-                    className="max-h-72 rounded-xl border border-white/10"
+                    className="max-h-72 rounded-xl border border-surface-200"
                   />
                 ) : (
-                  <div className="h-40 w-full animate-pulse rounded-xl bg-white/5" />
+                  <div className="h-40 w-full animate-pulse rounded-xl bg-surface-200/40" />
                 )}
               </div>
             )}

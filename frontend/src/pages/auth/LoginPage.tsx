@@ -44,7 +44,7 @@ export function LoginPage() {
     <div className="page-enter mx-auto flex w-full max-w-md flex-col justify-center px-4 py-12 md:py-20">
       <div className="mb-8 flex flex-col items-center text-center">
         <Logo className="h-12 w-12" />
-        <h1 className="mt-4 font-display text-2xl font-bold text-surface-900">Welcome back</h1>
+        <h1 className="mt-4 font-display text-2xl font-bold text-surface-800">Welcome back</h1>
         <p className="mt-1 text-sm text-surface-500">Sign in to your NexusUSDT account</p>
       </div>
 
@@ -76,7 +76,7 @@ export function LoginPage() {
           <div className="flex justify-end">
             <Link
               to="/forgot-password"
-              className="text-xs font-semibold text-brand-700 hover:text-brand-600"
+              className="text-xs font-semibold text-brand-400 hover:text-brand-300"
             >
               Forgot password?
             </Link>
@@ -89,7 +89,7 @@ export function LoginPage() {
 
       <p className="mt-6 text-center text-sm text-surface-500">
         New to NexusUSDT?{' '}
-        <Link to="/signup" className="font-semibold text-brand-700 hover:text-brand-600">
+        <Link to="/signup" className="font-semibold text-brand-400 hover:text-brand-300">
           Create an account
         </Link>
       </p>

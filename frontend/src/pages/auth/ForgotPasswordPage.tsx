@@ -38,7 +38,7 @@ export function ForgotPasswordPage() {
     <div className="page-enter mx-auto flex w-full max-w-md flex-col justify-center px-4 py-12 md:py-20">
       <div className="mb-8 flex flex-col items-center text-center">
         <Logo className="h-12 w-12" />
-        <h1 className="mt-4 font-display text-2xl font-bold text-surface-900">Forgot password</h1>
+        <h1 className="mt-4 font-display text-2xl font-bold text-surface-800">Forgot password</h1>
         <p className="mt-1 text-sm text-surface-500">
           We'll send reset instructions to your email
         </p>
@@ -85,7 +85,7 @@ export function ForgotPasswordPage() {
 
       <p className="mt-6 text-center text-sm text-surface-500">
         Remembered it?{' '}
-        <Link to="/login" className="font-semibold text-brand-700 hover:text-brand-600">
+        <Link to="/login" className="font-semibold text-brand-400 hover:text-brand-300">
           Sign in
         </Link>
       </p>

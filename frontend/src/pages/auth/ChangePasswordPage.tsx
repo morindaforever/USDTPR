@@ -86,7 +86,7 @@ export function ChangePasswordPage() {
         </Card>
 
         <p className="text-center text-sm text-surface-500">
-          <Link to="/account" className="font-semibold text-brand-700 hover:text-brand-600">
+          <Link to="/account" className="font-semibold text-brand-400 hover:text-brand-300">
             ← Back to account
           </Link>
         </p>

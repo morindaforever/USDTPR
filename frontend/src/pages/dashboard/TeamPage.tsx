@@ -83,7 +83,7 @@ export function TeamPage() {
     >
       <div className="space-y-6">
         {/* Notice */}
-        <div className="rounded-xl bg-sky-50 p-3.5 text-sm text-sky-900 ring-1 ring-inset ring-sky-200">
+        <div className="rounded-xl bg-info-50 p-3.5 text-sm text-info-900 ring-1 ring-inset ring-sky-200">
           <p>
             <span className="font-semibold">Referral Program.</span> Commission figures are
             calculated from eligible VIP rewards.
@@ -95,7 +95,7 @@ export function TeamPage() {
             <Skeleton className="h-32 w-full rounded-2xl" />
           </div>
         ) : summaryQuery.error ? (
-          <div className="rounded-2xl border border-surface-200 bg-white p-5 text-center">
+          <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 text-center">
             <p className="flex items-center justify-center gap-2 text-sm text-surface-600">
               <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
               Unable to load referral information.
@@ -117,7 +117,7 @@ export function TeamPage() {
 
         {/* Team members with level filters (§51) */}
         <section aria-labelledby="team-members-heading">
-          <h2 id="team-members-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="team-members-heading" className="eyebrow mb-3">
             Team Members
           </h2>
           <div className="mb-3 flex flex-wrap gap-2" role="tablist" aria-label="Filter by level">
@@ -133,8 +133,8 @@ export function TeamPage() {
                 }}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
                   level === value
-                    ? 'bg-brand-600 text-white shadow-sm'
-                    : 'bg-surface-50 text-surface-600 ring-1 ring-inset ring-surface-200 hover:bg-surface-100'
+                    ? 'bg-brand-600 text-surface-800 shadow-sm'
+                    : 'bg-surface-50 text-surface-600 ring-1 ring-inset ring-surface-300 hover:bg-surface-300'
                 }`}
               >
                 {value === 'all' ? 'All' : `Level ${value}`}
@@ -147,7 +147,7 @@ export function TeamPage() {
               <Skeleton className="h-16 w-full rounded-2xl" />
             </div>
           ) : teamError ? (
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 text-center">
+            <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 text-center">
               <p className="flex items-center justify-center gap-2 text-sm text-surface-600">
                 <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
                 {teamError}
@@ -165,7 +165,7 @@ export function TeamPage() {
               <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
                 <Users className="h-5 w-5" aria-hidden />
               </span>
-              <p className="mt-2 text-sm font-semibold text-surface-900">No team members yet</p>
+              <p className="mt-2 text-sm font-semibold text-surface-800">No team members yet</p>
               <p className="mt-1 text-xs text-surface-500">
                 Share your referral link to invite your first team member.
               </p>
@@ -202,7 +202,7 @@ export function TeamPage() {
 
         {/* Commission history (§28) */}
         <section aria-labelledby="commission-history-heading">
-          <h2 id="commission-history-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="commission-history-heading" className="eyebrow mb-3">
             Commission History
           </h2>
           {commissionsLoading ? (
@@ -211,7 +211,7 @@ export function TeamPage() {
               <Skeleton className="h-16 w-full rounded-2xl" />
             </div>
           ) : commissionsError ? (
-            <p className="rounded-2xl border border-surface-200 bg-white p-5 text-center text-sm text-surface-600">
+            <p className="rounded-2xl border border-surface-200 bg-surface-50 p-5 text-center text-sm text-surface-600">
               {commissionsError}
             </p>
           ) : (

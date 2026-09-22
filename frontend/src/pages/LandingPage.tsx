@@ -132,14 +132,14 @@ export function LandingPage() {
           }}
         />
         <div className="relative mx-auto w-full max-w-5xl px-4 py-16 text-center md:px-6 md:py-24">
-          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-surface-200 backdrop-blur">
+          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-surface-200 bg-surface-200/40 px-3 py-1 text-xs font-medium text-surface-600 ackdrop-blur">
             <span
               className={
                 apiStatus === 'online'
-                  ? 'h-2 w-2 rounded-full bg-emerald-400'
+                  ? 'h-2 w-2 rounded-full bg-brand-400'
                   : apiStatus === 'checking'
                     ? 'h-2 w-2 animate-pulse rounded-full bg-surface-400'
-                    : 'h-2 w-2 rounded-full bg-red-400'
+                    : 'h-2 w-2 rounded-full bg-danger-500'
               }
             />
             {apiStatus === 'checking' && 'Connecting to API…'}
@@ -147,21 +147,21 @@ export function LandingPage() {
             {apiStatus === 'offline' && 'Backend offline (start the API)'}
           </div>
 
-          <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight text-white md:text-6xl">
+          <h1 className="font-display text-4xl font-extrabold leading-tight tracking-tight text-surface-800 md:text-6xl">
             A USDT-based platform for{' '}
             <span className="bg-gradient-to-r from-brand-300 to-brand-500 bg-clip-text text-transparent">
               investment plans
             </span>{' '}
             and daily rewards
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-surface-300 md:text-lg">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-surface-600 md:text-lg">
             NexusUSDT lets you fund a USDT wallet, choose from available investment
             plans with defined targets and daily reward rates, and track every
             balance change in an auditable ledger.
           </p>
 
-          <p className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full border border-amber-300/30 bg-amber-400/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-amber-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" aria-hidden />
+          <p className="mx-auto mt-4 inline-flex items-center gap-2 rounded-full border border-accent-300/30 bg-accent-500/10 px-3.5 py-1.5 text-xs font-bold uppercase tracking-wide text-accent-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent-600" aria-hidden />
             Platform Overview
           </p>
 
@@ -186,11 +186,11 @@ export function LandingPage() {
             ].map(([value, label]) => (
               <div
                 key={label}
-                className="rounded-2xl border border-white/10 bg-white/5 px-3 py-4 backdrop-blur"
+                className="rounded-2xl border border-surface-200 bg-surface-900/60 px-3 py-4 backdrop-blur"
               >
                 <dt className="sr-only">{label}</dt>
-                <dd className="font-display text-lg font-bold text-white md:text-2xl">{value}</dd>
-                <dd className="mt-0.5 text-[11px] text-surface-400 md:text-xs">{label}</dd>
+                <dd className="font-display text-lg font-bold text-surface-800 md:text-2xl">{value}</dd>
+                <dd className="mt-0.5 text-[11px] text-surface-500 md:text-xs">{label}</dd>
               </div>
             ))}
           </dl>
@@ -200,7 +200,7 @@ export function LandingPage() {
       {/* Features */}
       <section className="mx-auto w-full max-w-5xl px-4 py-14 md:px-6 md:py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-2xl font-bold text-surface-900 md:text-3xl">
+          <h2 className="font-display text-2xl font-bold text-surface-800 md:text-3xl">
             Everything in one dashboard
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-surface-500 md:text-base">
@@ -211,12 +211,12 @@ export function LandingPage() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FEATURES.map(({ icon: Icon, title, description }) => (
-            <Card key={title} className="group transition-shadow hover:shadow-card-hover">
+            <Card key={title} className="group transition-shadow ">
               <div className="p-5">
-                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 transition-colors group-hover:bg-brand-100">
+                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500/12 text-brand-400 transition-colors group-hover:bg-brand-500/20">
                   <Icon className="h-5 w-5" aria-hidden />
                 </div>
-                <h3 className="text-sm font-semibold text-surface-900">{title}</h3>
+                <h3 className="text-sm font-semibold text-surface-800">{title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-surface-500">{description}</p>
               </div>
             </Card>
@@ -225,10 +225,10 @@ export function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="border-y border-surface-200/70 bg-white">
+      <section className="border-y border-surface-200 bg-surface-900/40">
         <div className="mx-auto w-full max-w-5xl px-4 py-14 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-2xl font-bold text-surface-900 md:text-3xl">
+            <h2 className="font-display text-2xl font-bold text-surface-800 md:text-3xl">
               Get started in three steps
             </h2>
             <p className="mt-3 text-sm text-surface-500 md:text-base">
@@ -240,8 +240,8 @@ export function LandingPage() {
               <li key={step}>
                 <Card className="h-full">
                   <div className="p-5">
-                    <span className="font-display text-sm font-bold text-brand-600">{step}</span>
-                    <h3 className="mt-2 text-sm font-semibold text-surface-900">{title}</h3>
+                    <span className="font-display text-sm font-bold text-brand-400">{step}</span>
+                    <h3 className="mt-2 text-sm font-semibold text-surface-800">{title}</h3>
                     <p className="mt-1.5 text-sm leading-relaxed text-surface-500">{description}</p>
                   </div>
                 </Card>
@@ -253,7 +253,7 @@ export function LandingPage() {
 
       {/* CTA */}
       <section className="mx-auto w-full max-w-5xl px-4 py-14 md:px-6 md:py-20">
-        <div className="relative overflow-hidden rounded-3xl bg-surface-950 px-6 py-12 text-center md:py-16">
+        <div className="relative overflow-hidden rounded-3xl border border-surface-200 bg-surface-900 px-6 py-12 text-center md:py-16">
           <div
             aria-hidden
             className="absolute inset-0 opacity-30"
@@ -263,10 +263,10 @@ export function LandingPage() {
             }}
           />
           <div className="relative">
-            <h2 className="font-display text-2xl font-bold text-white md:text-3xl">
+            <h2 className="font-display text-2xl font-bold text-surface-800 md:text-3xl">
               Ready to get started?
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-surface-300 md:text-base">
+            <p className="mx-auto mt-3 max-w-xl text-sm text-surface-600 md:text-base">
               Create an account, fund your wallet, and review the available plans.
             </p>
             <Link to="/signup" className="mt-7 inline-flex items-center gap-2">
@@ -280,10 +280,10 @@ export function LandingPage() {
       </section>
 
       {/* FAQ (§4) — honest answers, no financial claims. */}
-      <section className="border-t border-surface-200/70 bg-white">
+      <section className="border-t border-surface-200 bg-surface-900/40">
         <div className="mx-auto w-full max-w-3xl px-4 py-14 md:px-6 md:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="font-display text-2xl font-bold text-surface-900 md:text-3xl">
+            <h2 className="font-display text-2xl font-bold text-surface-800 md:text-3xl">
               Frequently asked questions
             </h2>
             <p className="mt-3 text-sm text-surface-500 md:text-base">
@@ -294,9 +294,9 @@ export function LandingPage() {
             {FAQ.map((item) => (
               <div
                 key={item.question}
-                className="rounded-2xl border border-surface-200 bg-surface-50/60 p-5"
+                className="rounded-2xl border border-surface-200 bg-surface-900/40 p-5"
               >
-                <dt className="text-sm font-semibold text-surface-900">{item.question}</dt>
+                <dt className="text-sm font-semibold text-surface-800">{item.question}</dt>
                 <dd className="mt-2 text-sm leading-relaxed text-surface-600">{item.answer}</dd>
               </div>
             ))}
@@ -306,9 +306,9 @@ export function LandingPage() {
 
       {/* Risk disclosure — plain statement, no disclaimers hidden in footers. */}
       <section className="mx-auto w-full max-w-3xl px-4 pb-14 md:px-6 md:pb-20">
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-          <h2 className="text-sm font-semibold text-amber-900">Risk disclosure</h2>
-          <p className="mt-2 text-sm leading-relaxed text-amber-800">
+        <div className="rounded-2xl border border-accent-500/25 bg-accent-500/10 p-5">
+          <h2 className="text-sm font-semibold text-accent-800">Risk disclosure</h2>
+          <p className="mt-2 text-sm leading-relaxed text-accent-800">
             Digital assets and investment activities involve risk. Returns are not
             guaranteed, and users should review the terms and risks before
             participating. NexusUSDT does not promise guaranteed profits, risk-free

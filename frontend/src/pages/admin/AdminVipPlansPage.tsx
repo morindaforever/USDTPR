@@ -220,7 +220,7 @@ export function AdminVipPlansPage() {
               type="checkbox"
               checked={form.is_active}
               onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-              className="h-4 w-4 rounded border-white/20 bg-surface-900"
+              className="h-4 w-4 rounded border-white/20 bg-surface-50"
             />
             Active (available for purchase)
           </label>

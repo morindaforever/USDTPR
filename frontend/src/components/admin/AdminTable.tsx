@@ -64,7 +64,7 @@ export function AdminTable<T>({
                 value={searchValue ?? ''}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 placeholder={searchPlaceholder ?? 'Search…'}
-                className="w-full rounded-xl border border-white/10 bg-surface-900 py-2.5 pl-9 pr-3 text-sm text-surface-100 placeholder:text-surface-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                className="w-full rounded-xl border border-surface-200 bg-surface-50 py-2.5 pl-9 pr-3 text-sm text-surface-100 placeholder:text-surface-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
               />
             </div>
           )}
@@ -75,31 +75,31 @@ export function AdminTable<T>({
       {isLoading ? (
         <div className="space-y-2">
           {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-12 animate-pulse rounded-xl bg-white/5" />
+            <div key={i} className="h-12 animate-pulse rounded-xl bg-surface-200/40" />
           ))}
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-white/10 bg-surface-900 p-6 text-center">
+        <div className="rounded-2xl border border-surface-200 bg-surface-50 p-6 text-center">
           <AlertTriangle className="mx-auto h-6 w-6 text-amber-400" aria-hidden />
           <p className="mt-2 text-sm text-surface-300">{error}</p>
           <button
             type="button"
             onClick={onRetry}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3.5 py-2 text-xs font-semibold text-surface-200 hover:bg-white/5"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-surface-200 px-3.5 py-2 text-xs font-semibold text-surface-200 hover:bg-surface-200/40"
           >
             <RefreshCw className="h-3.5 w-3.5" aria-hidden /> Retry
           </button>
         </div>
       ) : (rows ?? []).length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/10 p-8 text-center">
+        <div className="rounded-2xl border border-dashed border-surface-200 p-8 text-center">
           <p className="text-sm text-surface-400">{emptyMessage}</p>
         </div>
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden overflow-hidden rounded-2xl border border-white/10 md:block">
+          <div className="hidden overflow-hidden rounded-2xl border border-surface-200 md:block">
             <table className="w-full text-left text-sm">
-              <thead className="bg-white/5 text-[11px] uppercase tracking-wide text-surface-400">
+              <thead className="bg-surface-200/40 text-[11px] uppercase tracking-wide text-surface-400">
                 <tr>
                   {columns.map((col) => (
                     <th key={col.key} scope="col" className={cn('px-4 py-3 font-semibold', col.className)}>
@@ -108,9 +108,9 @@ export function AdminTable<T>({
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-surface-200">
                 {(rows ?? []).map((row) => (
-                  <tr key={rowKey(row)} className="text-surface-200 transition-colors hover:bg-white/5">
+                  <tr key={rowKey(row)} className="text-surface-200 transition-colors hover:bg-surface-200/40">
                     {columns.map((col) => (
                       <td key={col.key} className={cn('px-4 py-3', col.className)}>
                         {col.render(row)}
@@ -126,12 +126,12 @@ export function AdminTable<T>({
           <div className="space-y-2 md:hidden">
             {renderCard
               ? (rows ?? []).map((row) => (
-                  <div key={rowKey(row)} className="rounded-2xl border border-white/10 bg-surface-900 p-3">
+                  <div key={rowKey(row)} className="rounded-2xl border border-surface-200 bg-surface-50 p-3">
                     {renderCard(row)}
                   </div>
                 ))
               : (rows ?? []).map((row) => (
-                  <div key={rowKey(row)} className="space-y-1.5 rounded-2xl border border-white/10 bg-surface-900 p-3">
+                  <div key={rowKey(row)} className="space-y-1.5 rounded-2xl border border-surface-200 bg-surface-50 p-3">
                     {columns.map((col) => (
                       <div key={col.key} className="flex items-center justify-between gap-2 text-sm">
                         <span className="text-[11px] uppercase tracking-wide text-surface-500">{col.header}</span>
@@ -153,7 +153,7 @@ export function AdminTable<T>({
                   type="button"
                   disabled={page <= 1}
                   onClick={() => onPageChange(page - 1)}
-                  className="rounded-lg border border-white/10 p-1.5 disabled:opacity-40"
+                  className="rounded-lg border border-surface-200 p-1.5 disabled:opacity-40"
                   aria-label="Previous page"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -162,7 +162,7 @@ export function AdminTable<T>({
                   type="button"
                   disabled={page >= pageCount}
                   onClick={() => onPageChange(page + 1)}
-                  className="rounded-lg border border-white/10 p-1.5 disabled:opacity-40"
+                  className="rounded-lg border border-surface-200 p-1.5 disabled:opacity-40"
                   aria-label="Next page"
                 >
                   <ChevronRight className="h-4 w-4" />

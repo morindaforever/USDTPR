@@ -42,14 +42,14 @@ export function NetworkSelector({ networks, value, disabled = false, onChange }:
               'group relative rounded-xl border p-3 text-left transition-all',
               'disabled:pointer-events-none disabled:opacity-60',
               selected
-                ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500'
-                : 'border-surface-200 bg-white hover:border-brand-300 hover:bg-brand-50/40',
+                ? 'border-brand-500 bg-brand-500/10 ring-1 ring-brand-500/40'
+                : 'border-surface-200 bg-surface-50 hover:border-brand-500/30 hover:bg-surface-100',
             )}
           >
             <span className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-surface-900">{network.code}</span>
+              <span className="text-sm font-semibold text-surface-800">{network.code}</span>
               {selected && (
-                <Check className="h-4 w-4 text-brand-600" aria-hidden />
+                <Check className="h-4 w-4 text-brand-400" aria-hidden />
               )}
             </span>
             <span className="mt-0.5 block text-xs text-surface-500">{network.name}</span>
@@ -67,7 +67,7 @@ export function NetworkSelector({ networks, value, disabled = false, onChange }:
                   void copyAddress(network.code);
                 }
               }}
-              className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-surface-400 hover:text-brand-600"
+              className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-surface-400 hover:text-brand-400"
             >
               {copied === network.code ? (
                 <>
@@ -81,7 +81,7 @@ export function NetworkSelector({ networks, value, disabled = false, onChange }:
             </span>
             {selected && network.address_hint ? (
               <span className="mt-1.5 flex items-start gap-1 text-[10px] leading-tight text-surface-500">
-                <ShieldAlert className="h-3 w-3 shrink-0 text-amber-500" aria-hidden />
+                <ShieldAlert className="h-3 w-3 shrink-0 text-accent-600" aria-hidden />
                 {network.address_hint}
               </span>
             ) : null}

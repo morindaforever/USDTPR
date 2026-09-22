@@ -32,17 +32,17 @@ export function PurchaseConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-surface-950/50 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="purchase-confirm-title"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-3xl bg-white p-5 shadow-xl sm:rounded-3xl sm:p-6"
+        className="w-full max-w-md rounded-t-3xl bg-surface-50 p-5 shadow-xl sm:rounded-3xl sm:p-6"
         onClick={(event) => event.stopPropagation()}
       >
-        <h2 id="purchase-confirm-title" className="text-lg font-semibold text-surface-900">
+        <h2 id="purchase-confirm-title" className="text-lg font-semibold text-surface-800">
           Confirm VIP Purchase
         </h2>
         <p className="mt-1 text-sm text-surface-500">
@@ -63,11 +63,11 @@ export function PurchaseConfirmModal({
           <dl className="mt-5 space-y-2.5 rounded-2xl bg-surface-50 p-4 text-sm">
             <div className="flex items-center justify-between">
               <dt className="text-surface-500">Plan</dt>
-              <dd className="font-semibold text-surface-900">{plan.name}</dd>
+              <dd className="font-semibold text-surface-800">{plan.name}</dd>
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-surface-500">Investment</dt>
-              <dd className="font-semibold tabular-nums text-surface-900">
+              <dd className="font-semibold tabular-nums text-surface-800">
                 {Number(plan.investment_amount) === 0
                   ? 'Free — 0 USDT'
                   : `${formatUsdt(plan.investment_amount)} USDT`}
@@ -77,19 +77,19 @@ export function PurchaseConfirmModal({
               <dt className="text-surface-500">
                 {Number(plan.investment_amount) === 0 ? 'Welcome Reward Target' : 'Target'}
               </dt>
-              <dd className="font-semibold tabular-nums text-surface-900">
+              <dd className="font-semibold tabular-nums text-surface-800">
                 {formatUsdt(plan.target_amount)} USDT
               </dd>
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-surface-500">Daily Return</dt>
-              <dd className="font-semibold tabular-nums text-brand-700">
+              <dd className="font-semibold tabular-nums text-brand-400">
                 {plan.daily_rate_percent}%
               </dd>
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-surface-500">Daily Reward</dt>
-              <dd className="font-semibold tabular-nums text-brand-700">
+              <dd className="font-semibold tabular-nums text-brand-400">
                 {formatUsdt(
                   (Number(plan.target_amount) * Number(plan.daily_rate)).toFixed(2),
                 )}{' '}
@@ -97,7 +97,7 @@ export function PurchaseConfirmModal({
               </dd>
             </div>
             {Number(plan.investment_amount) === 0 && (
-              <p className="rounded-xl bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
+              <p className="rounded-xl bg-accent-200 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
                 Promotional welcome reward — accrues daily from the next reward cycle
                 until the reward target is reached. Nothing is spent or credited at
                 claim time. Not investment profit. Does not unlock withdrawals.
@@ -106,7 +106,7 @@ export function PurchaseConfirmModal({
             <div className="my-2 border-t border-surface-200" />
             <div className="flex items-center justify-between">
               <dt className="text-surface-500">Available (deposit + withdrawable)</dt>
-              <dd className="font-semibold tabular-nums text-surface-900">
+              <dd className="font-semibold tabular-nums text-surface-800">
                 {formatUsdt(summary.available_balance)} USDT
               </dd>
             </div>
@@ -114,7 +114,7 @@ export function PurchaseConfirmModal({
               <dt className="text-surface-500">Balance after purchase</dt>
               <dd
                 className={`font-semibold tabular-nums ${
-                  summary.sufficient ? 'text-surface-900' : 'text-red-600'
+                  summary.sufficient ? 'text-surface-800' : 'text-danger-600'
                 }`}
               >
                 {formatUsdt(summary.balance_after_purchase)} USDT
@@ -124,7 +124,7 @@ export function PurchaseConfirmModal({
         )}
 
         {errorMessage && (
-          <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">
+          <p role="alert" className="mt-3 rounded-xl bg-danger-50 p-3 text-sm text-danger-700">
             {errorMessage}
           </p>
         )}
@@ -142,7 +142,7 @@ export function PurchaseConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={isPurchasing || isLoading || !summary?.sufficient}
-            className="flex-1 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700 active:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-surface-800 shadow-sm transition-colors hover:bg-brand-700 active:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPurchasing
               ? 'Processing…'

@@ -49,7 +49,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       aria-label={`${copied ? 'Copied' : `Copy ${label}`}`}
     >
       {copied ? (
-        <Check className="h-4 w-4 text-emerald-600" aria-hidden />
+        <Check className="h-4 w-4 text-brand-400" aria-hidden />
       ) : (
         <Copy className="h-4 w-4" aria-hidden />
       )}
@@ -178,8 +178,8 @@ export function DepositPage() {
         {/* Step 1 — network (§9) */}
         <Card>
           <div className="p-5">
-            <h2 className="text-sm font-semibold text-surface-900">
-              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white">1</span>
+            <h2 className="text-sm font-semibold text-surface-800">
+              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-500/15 text-[11px] font-bold text-brand-400">1</span>
               Select network
             </h2>
             {networks.length === 0 ? (
@@ -196,8 +196,8 @@ export function DepositPage() {
                     className={cn(
                       'rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors',
                       selected === network.code
-                        ? 'border-brand-600 bg-brand-600 text-white'
-                        : 'border-surface-200 bg-white text-surface-700 hover:bg-surface-50',
+                        ? 'border-brand-500 bg-brand-500 text-white'
+                        : 'border-surface-200 bg-surface-50 text-surface-700 hover:bg-surface-50',
                     )}
                   >
                     {network.name}
@@ -214,8 +214,8 @@ export function DepositPage() {
               </p>
             )}
 
-            <div className="mt-4 rounded-xl bg-amber-50 p-3 ring-1 ring-inset ring-amber-200">
-              <p className="flex items-start gap-2 text-xs leading-relaxed text-amber-900">
+            <div className="mt-4 rounded-xl bg-accent-500/10 p-3 ring-1 ring-inset ring-accent-500/25">
+              <p className="flex items-start gap-2 text-xs leading-relaxed text-accent-900">
                 <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
                 {selectedNetwork?.network_warning ||
                   'Send USDT only on the selected network. Sending assets through another network may result in permanent loss.'}
@@ -230,8 +230,8 @@ export function DepositPage() {
         {/* Step 2 — address + QR (§9) */}
         <Card>
           <div className="p-5">
-            <h2 className="text-sm font-semibold text-surface-900">
-              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white">2</span>
+            <h2 className="text-sm font-semibold text-surface-800">
+              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-500/15 text-[11px] font-bold text-brand-400">2</span>
               Deposit address {selected && <span className="text-surface-400">({selected})</span>}
             </h2>
             {addressLoading ? (
@@ -240,14 +240,14 @@ export function DepositPage() {
                 <Skeleton className="h-10 w-full" />
               </div>
             ) : addressError ? (
-              <p role="alert" className="mt-3 text-sm text-red-600">{addressError}</p>
+              <p role="alert" className="mt-3 text-sm text-danger-600">{addressError}</p>
             ) : address ? (
               <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
                 {/* Server-rendered QR — always matches the address shown. */}
                 <img
                   src={address.qr_code}
                   alt={`QR code for deposit address ${address.address}`}
-                  className="h-32 w-32 shrink-0 rounded-xl border border-surface-200 bg-white"
+                  className="h-36 w-36 shrink-0 rounded-xl border border-surface-200 bg-white p-1.5"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-surface-500">Address</p>
@@ -270,8 +270,8 @@ export function DepositPage() {
         {/* Step 3 — amount + reference (§9) */}
         <Card>
           <div className="p-5">
-            <h2 className="text-sm font-semibold text-surface-900">
-              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white">3</span>
+            <h2 className="text-sm font-semibold text-surface-800">
+              <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand-500/15 text-[11px] font-bold text-brand-400">3</span>
               Submit deposit for review
             </h2>
             {effectiveMinimum && (
@@ -313,7 +313,7 @@ export function DepositPage() {
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
                   onChange={onScreenshotChange}
-                  className="block w-full cursor-pointer rounded-xl border border-surface-200 bg-white px-3 py-2.5 text-sm text-surface-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-700 hover:file:bg-brand-100"
+                  className="block w-full cursor-pointer rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-sm text-surface-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-brand-500/12 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-brand-400 hover:file:bg-brand-500/15"
                 />
                 {screenshot && (
                   <p className="mt-1.5 text-xs text-surface-500">
@@ -321,7 +321,7 @@ export function DepositPage() {
                   </p>
                 )}
                 {fieldErrors.screenshot?.[0] && (
-                  <p className="mt-1.5 text-xs text-red-600">{fieldErrors.screenshot[0]}</p>
+                  <p className="mt-1.5 text-xs text-danger-600">{fieldErrors.screenshot[0]}</p>
                 )}
               </div>
               <Button
@@ -346,7 +346,7 @@ export function DepositPage() {
         {/* Review status (§9) */}
         <Card>
           <div className="p-5">
-            <h2 className="text-sm font-semibold text-surface-900">Your deposits</h2>
+            <h2 className="text-sm font-semibold text-surface-800">Your deposits</h2>
             {history.isLoading ? (
               <div className="mt-4 space-y-2">
                 <Skeleton className="h-10 w-full" />
@@ -366,17 +366,17 @@ export function DepositPage() {
                 appear here.
               </p>
             ) : (
-              <ul className="mt-4 divide-y divide-surface-100">
+              <ul className="mt-4 divide-y divide-surface-200">
                 {rows.map((deposit) => (
                   <li key={deposit.deposit_id} className="flex items-center gap-3 py-3">
                     <span
-                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600"
+                      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/12 text-brand-400"
                       aria-hidden
                     >
                       <ArrowDownToLine className="h-4 w-4" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-surface-900">
+                      <p className="truncate text-sm font-semibold text-surface-800">
                         {formatUsdt(deposit.amount)} USDT · {deposit.network}
                       </p>
                       <p className="text-[11px] text-surface-400">
@@ -387,10 +387,10 @@ export function DepositPage() {
                       className={cn(
                         'rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide',
                         STATUS_TONE[deposit.status] === 'success' &&
-                          'bg-emerald-50 text-emerald-700',
+                          'bg-brand-500/10 text-brand-400',
                         STATUS_TONE[deposit.status] === 'warning' &&
-                          'bg-amber-50 text-amber-700',
-                        STATUS_TONE[deposit.status] === 'danger' && 'bg-red-50 text-red-700',
+                          'bg-accent-500/15 text-accent-600',
+                        STATUS_TONE[deposit.status] === 'danger' && 'bg-danger-50 text-danger-700',
                       )}
                     >
                       {deposit.status.toLowerCase()}

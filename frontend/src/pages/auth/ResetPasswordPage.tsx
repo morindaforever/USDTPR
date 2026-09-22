@@ -40,7 +40,7 @@ export function ResetPasswordPage() {
     <div className="page-enter mx-auto flex w-full max-w-md flex-col justify-center px-4 py-12 md:py-20">
       <div className="mb-8 flex flex-col items-center text-center">
         <Logo className="h-12 w-12" />
-        <h1 className="mt-4 font-display text-2xl font-bold text-surface-900">
+        <h1 className="mt-4 font-display text-2xl font-bold text-surface-800">
           Choose a new password
         </h1>
         <p className="mt-1 text-sm text-surface-500">

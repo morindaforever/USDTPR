@@ -45,11 +45,11 @@ export function AdminDashboardPage() {
       {query.isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-            <Skeleton key={i} className="h-24 w-full rounded-2xl bg-white/5" />
+            <Skeleton key={i} className="h-24 w-full rounded-2xl bg-surface-200/40" />
           ))}
         </div>
       ) : query.error || !data ? (
-        <div className="rounded-2xl border border-white/10 bg-surface-900 p-6 text-center text-sm text-surface-300">
+        <div className="rounded-2xl border border-surface-200 bg-surface-50 p-6 text-center text-sm text-surface-300">
           {query.error || 'Unable to load dashboard.'}
         </div>
       ) : (
@@ -69,7 +69,7 @@ export function AdminDashboardPage() {
           </section>
 
           {/* Real financial activity (§15/§16) — actual DB aggregates. */}
-          <div className="rounded-2xl border border-surface-700 bg-surface-900 p-4">
+          <div className="rounded-2xl border border-surface-700 bg-surface-50 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-surface-300">
               {data.financial_metrics.label}
             </p>
@@ -83,7 +83,7 @@ export function AdminDashboardPage() {
               ].map(([label, metric]) => {
                 const m = metric as { count: number; amount?: string; investment?: string };
                 return (
-                  <div key={label as string} className="rounded-xl bg-surface-900 p-3">
+                  <div key={label as string} className="rounded-xl bg-surface-50 p-3">
                     <p className="text-[11px] text-surface-400">{label as string}</p>
                     <p className="mt-0.5 font-semibold tabular-nums text-white">
                       {m.amount ?? m.investment} USDT
@@ -97,14 +97,14 @@ export function AdminDashboardPage() {
 
           {/* Registrations chart (§9) */}
           {data.registrations.length > 0 && (
-            <section aria-label="Registrations" className="rounded-2xl border border-white/10 bg-surface-900 p-4">
+            <section aria-label="Registrations" className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
               <h2 className="mb-3 text-sm font-semibold text-white">User registrations per day</h2>
               <AdminMiniBarChart data={data.registrations} />
             </section>
           )}
 
           {/* Recent users */}
-          <section aria-label="Recent users" className="rounded-2xl border border-white/10 bg-surface-900 p-4">
+          <section aria-label="Recent users" className="rounded-2xl border border-surface-200 bg-surface-50 p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-white">Newest users</h2>
               <Link to="/admin/users" className="text-xs font-semibold text-brand-300 hover:text-brand-200">

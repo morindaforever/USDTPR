@@ -81,7 +81,7 @@ export function NewConversationModal({ open, onClose, onCreated }: NewConversati
                 key={preset}
                 type="button"
                 onClick={() => setSubject(preset)}
-                className="rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-medium text-surface-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
+                className="rounded-full bg-surface-100 px-2.5 py-1 text-[11px] font-medium text-surface-600 transition-colors hover:bg-brand-500/10 hover:text-brand-400"
               >
                 {preset}
               </button>

@@ -47,7 +47,7 @@ export function AdminVipPurchasesPage() {
     { key: 'inv', header: 'Investment', render: (row: AdminVipPurchase) => <span className="tabular-nums">{formatUsdt(row.investment_amount)}</span> },
     { key: 'prog', header: 'Progress', render: (row: AdminVipPurchase) => (
       <div className="min-w-[7rem]">
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-200/60">
           <div className="h-full rounded-full bg-brand-500" style={{ width: `${progress(row)}%` }} />
         </div>
         <span className="text-[11px] text-surface-500">{formatUsdt(row.rewarded_amount)} / {formatUsdt(row.target_amount)}</span>

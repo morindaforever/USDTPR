@@ -2,7 +2,7 @@ import type { HTMLAttributes } from 'react';
 import { cn } from '@/utils/cn';
 
 export interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  /** Renders a subtle gradient border treatment for emphasis. */
+  /** Renders an emerald emphasis treatment for the selected/active card. */
   highlight?: boolean;
 }
 
@@ -11,8 +11,8 @@ export function Card({ className, highlight = false, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        'rounded-2xl border border-surface-200/70 bg-white shadow-card',
-        highlight && 'border-brand-200 ring-1 ring-brand-500/20',
+        'rounded-2xl border border-surface-200 bg-surface-50',
+        highlight && 'border-brand-500/40 bg-brand-950/20 ring-1 ring-brand-500/20',
         className,
       )}
       {...props}
@@ -23,7 +23,7 @@ export function Card({ className, highlight = false, ...props }: CardProps) {
 export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex flex-col gap-1 border-b border-surface-100 px-4 py-3.5', className)}
+      className={cn('flex flex-col gap-1 border-b border-surface-200 px-4 py-3.5', className)}
       {...props}
     />
   );
@@ -32,7 +32,7 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn('text-sm font-semibold text-surface-900', className)}
+      className={cn('text-sm font-semibold text-surface-800', className)}
       {...props}
     />
   );
@@ -49,7 +49,7 @@ export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivEleme
 export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex items-center gap-2 border-t border-surface-100 px-4 py-3', className)}
+      className={cn('flex items-center gap-2 border-t border-surface-200 px-4 py-3', className)}
       {...props}
     />
   );

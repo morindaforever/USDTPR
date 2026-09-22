@@ -17,14 +17,14 @@ import type { AppNotification } from '@/types';
 
 /** Icons + accents per notification type (§3) — color never carries meaning alone. */
 const TYPE_META: Record<string, { icon: typeof Bell; classes: string; label: string }> = {
-  DEPOSIT: { icon: ArrowDownLeft, classes: 'bg-emerald-50 text-emerald-700', label: 'Deposit' },
+  DEPOSIT: { icon: ArrowDownLeft, classes: 'bg-brand-500/10 text-brand-400', label: 'Deposit' },
   WITHDRAWAL: { icon: ArrowUpRight, classes: 'bg-surface-100 text-surface-700', label: 'Withdrawal' },
-  VIP: { icon: Crown, classes: 'bg-amber-50 text-amber-700', label: 'VIP' },
+  VIP: { icon: Crown, classes: 'bg-accent-200 text-accent-700', label: 'VIP' },
   REWARD: { icon: Gift, classes: 'bg-violet-50 text-violet-700', label: 'Reward' },
-  REFERRAL: { icon: Users, classes: 'bg-sky-50 text-sky-700', label: 'Referral' },
+  REFERRAL: { icon: Users, classes: 'bg-info-50 text-info-700', label: 'Referral' },
   SUPPORT: { icon: LifeBuoy, classes: 'bg-blue-50 text-blue-700', label: 'Support' },
   SECURITY: { icon: ShieldCheck, classes: 'bg-rose-50 text-rose-700', label: 'Security' },
-  ANNOUNCEMENT: { icon: Megaphone, classes: 'bg-brand-50 text-brand-700', label: 'Announcement' },
+  ANNOUNCEMENT: { icon: Megaphone, classes: 'bg-brand-500/12 text-brand-400', label: 'Announcement' },
   SYSTEM: { icon: Settings, classes: 'bg-surface-100 text-surface-600', label: 'System' },
 };
 
@@ -72,7 +72,7 @@ export function NotificationItem({ notification, onMarkRead, busy }: Notificatio
         <div className="flex items-center gap-2">
           <p
             className={cn(
-              'truncate text-sm text-surface-900',
+              'truncate text-sm text-surface-800',
               notification.is_read ? 'font-medium' : 'font-semibold',
             )}
           >
@@ -98,7 +98,7 @@ export function NotificationItem({ notification, onMarkRead, busy }: Notificatio
             e.stopPropagation();
             onMarkRead(notification.id);
           }}
-          className="shrink-0 rounded-lg border border-surface-200 px-2 py-1 text-[11px] font-semibold text-surface-600 transition-colors hover:bg-surface-50 disabled:opacity-50"
+          className="shrink-0 rounded-lg border border-surface-200 px-2 py-1 text-[11px] font-semibold text-surface-600 transition-colors hover:bg-surface-100 disabled:opacity-50"
         >
           Mark read
         </button>
@@ -143,8 +143,8 @@ export function NotificationFilters({
           className={cn(
             'rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
             value === opt.value
-              ? 'border-brand-600 bg-brand-600 text-white'
-              : 'border-surface-200 bg-white text-surface-600 hover:bg-surface-50',
+              ? 'border-brand-600 bg-brand-600 text-surface-800'
+              : 'border-surface-200 bg-surface-50 text-surface-600 hover:bg-surface-100',
           )}
         >
           {opt.label}
@@ -161,7 +161,7 @@ export function NotificationEmptyState() {
       <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-100 text-surface-400">
         <Bell className="h-6 w-6" aria-hidden />
       </span>
-      <p className="mt-3 text-sm font-semibold text-surface-900">You're all caught up.</p>
+      <p className="mt-3 text-sm font-semibold text-surface-800">You're all caught up.</p>
       <p className="mt-1 text-xs text-surface-500">No notifications to show.</p>
     </div>
   );
@@ -170,7 +170,7 @@ export function NotificationEmptyState() {
 /** §35: loading skeleton rows. */
 export function NotificationSkeleton() {
   return (
-    <ul className="divide-y divide-surface-100">
+    <ul className="divide-y divide-surface-200">
       {[0, 1, 2].map((i) => (
         <li key={i} className="flex items-start gap-3 px-4 py-3">
           <span className="h-9 w-9 shrink-0 animate-pulse rounded-xl bg-surface-200/70" aria-hidden />

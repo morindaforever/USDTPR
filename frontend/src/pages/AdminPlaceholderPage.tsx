@@ -8,15 +8,15 @@ export default function AdminPlaceholderPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-surface-950 px-4">
       <PageContainer title="Admin" subtitle="Administrative console placeholder.">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur">
-          <p className="text-sm font-semibold text-white">Admin console not yet available</p>
+        <div className="rounded-2xl border border-surface-200 bg-surface-200/40 p-6 text-center backdrop-blur">
+          <p className="text-sm font-semibold text-surface-800">Admin console not yet available</p>
           <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-surface-400">
             Administrative authentication and financial controls arrive in a
             dedicated later section. This route is reserved.
           </p>
           <a
             href="/"
-            className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-500"
+            className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-surface-800 transition-colors hover:bg-brand-500/100"
           >
             Back to site
           </a>

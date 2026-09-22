@@ -15,7 +15,7 @@ import {
   Shield,
   Wallet,
 } from 'lucide-react';
-import { Badge, Button, Card, PageContainer } from '@/components';
+import { Badge, Button, Card, PageContainer, TelegramCommunityCard } from '@/components';
 import { Skeleton, useDashboardData } from '@/hooks';
 import { useAuth } from '@/context/AuthContext';
 import { accountService } from '@/services/accountService';
@@ -111,11 +111,11 @@ export function AccountPage() {
         <Card>
           <div className="p-5">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-50 font-display text-lg font-bold text-brand-700">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-500/12 font-display text-lg font-bold text-brand-400">
                 {currentUser.full_name?.trim()?.charAt(0).toUpperCase() || '?'}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-surface-900">
+                <p className="truncate text-sm font-semibold text-surface-800">
                   {currentUser.full_name || 'Unnamed user'}
                 </p>
                 <p className="truncate text-xs text-surface-500">{currentUser.email}</p>
@@ -129,32 +129,32 @@ export function AccountPage() {
               )}
             </div>
 
-            <dl className="mt-4 space-y-2.5 border-t border-surface-100 pt-4 text-sm">
+            <dl className="mt-4 space-y-2.5 border-t border-surface-200 pt-4 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-surface-500">User ID</dt>
-                <dd className="font-mono font-semibold text-surface-900">{currentUser.user_id}</dd>
+                <dd className="font-mono font-semibold text-surface-800">{currentUser.user_id}</dd>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-surface-500">Full Name</dt>
-                <dd className="font-medium text-surface-900">{currentUser.full_name || '—'}</dd>
+                <dd className="font-medium text-surface-800">{currentUser.full_name || '—'}</dd>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-surface-500">Phone</dt>
-                <dd className="font-medium tabular-nums text-surface-900">{currentUser.phone}</dd>
+                <dd className="font-medium tabular-nums text-surface-800">{currentUser.phone}</dd>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-surface-500">Status</dt>
-                <dd className="font-medium text-surface-900">{currentUser.account_status}</dd>
+                <dd className="font-medium text-surface-800">{currentUser.account_status}</dd>
               </div>
             </dl>
 
             {profileSaved && (
-              <p className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700">
+              <p className="mt-3 rounded-xl bg-brand-500/10 px-3 py-2 text-xs font-semibold text-brand-400">
                 Profile updated.
               </p>
             )}
             {profileError && (
-              <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-xs text-red-700">{profileError}</p>
+              <p className="mt-3 rounded-xl bg-danger-50 px-3 py-2 text-xs text-danger-700">{profileError}</p>
             )}
 
             {editing ? (
@@ -206,7 +206,7 @@ export function AccountPage() {
 
         {/* Referral information (§11) — reuses the Section 9 code */}
         <section aria-labelledby="referral-heading">
-          <h2 id="referral-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="referral-heading" className="eyebrow mb-3">
             Referral Information
           </h2>
           <Card>
@@ -216,7 +216,7 @@ export function AccountPage() {
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-400">
                     Referral Code
                   </p>
-                  <p className="truncate font-mono text-sm font-semibold text-surface-900">
+                  <p className="truncate font-mono text-sm font-semibold text-surface-800">
                     {currentUser.referral_code}
                   </p>
                 </div>
@@ -229,7 +229,7 @@ export function AccountPage() {
                   {copiedField === 'code' ? 'Copied' : 'Copy Code'}
                 </Button>
               </div>
-              <div className="flex items-center justify-between gap-3 border-t border-surface-100 pt-3">
+              <div className="flex items-center justify-between gap-3 border-t border-surface-200 pt-3">
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-surface-400">
                     Referral Link
@@ -251,7 +251,7 @@ export function AccountPage() {
 
         {/* Activity (§18–§19) — curated safe feed */}
         <section aria-labelledby="activity-heading">
-          <h2 id="activity-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="activity-heading" className="eyebrow mb-3">
             Recent Activity
           </h2>
           <Card>
@@ -266,7 +266,7 @@ export function AccountPage() {
             ) : (activityQuery.data ?? []).length === 0 ? (
               <p className="p-4 text-sm text-surface-500">No activity yet.</p>
             ) : (
-              <ul className="divide-y divide-surface-100">
+              <ul className="divide-y divide-surface-200">
                 {(activityQuery.data ?? []).slice(0, 10).map((entry, index) => {
                   const MONEY_TYPES = new Set(['deposit', 'withdrawal', 'vip_purchase', 'reward']);
                   return (
@@ -290,11 +290,11 @@ export function AccountPage() {
 
         {/* Quick links into existing financial surfaces (§64) */}
         <section aria-labelledby="links-heading">
-          <h2 id="links-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="links-heading" className="eyebrow mb-3">
             History &amp; Records
           </h2>
           <Card>
-            <ul className="divide-y divide-surface-100">
+            <ul className="divide-y divide-surface-200">
               {[
                 { icon: Wallet, label: 'Balances & transactions', note: 'Full ledger history', to: '/wallet' },
                 { icon: ArrowUpFromLine, label: 'Withdrawals', note: 'Requests and review status', to: '/withdraw' },
@@ -304,7 +304,7 @@ export function AccountPage() {
                   <button
                     type="button"
                     onClick={() => navigate(to)}
-                    className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-50"
+                    className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-100"
                   >
                     <span className="flex items-center gap-3">
                       <Icon className="h-4 w-4 text-surface-400" aria-hidden />
@@ -322,16 +322,16 @@ export function AccountPage() {
 
         {/* Security (§13) */}
         <section aria-labelledby="security-heading">
-          <h2 id="security-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="security-heading" className="eyebrow mb-3">
             Security
           </h2>
           <Card>
-            <ul className="divide-y divide-surface-100">
+            <ul className="divide-y divide-surface-200">
               <li>
                 <button
                   type="button"
                   onClick={() => navigate('/account/change-password')}
-                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-50"
+                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-100"
                 >
                   <span className="flex items-center gap-3">
                     <KeyRound className="h-4 w-4 text-surface-400" aria-hidden />
@@ -348,7 +348,7 @@ export function AccountPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/forgot-password')}
-                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-50"
+                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-100"
                 >
                   <span className="flex items-center gap-3">
                     <Shield className="h-4 w-4 text-surface-400" aria-hidden />
@@ -362,16 +362,16 @@ export function AccountPage() {
 
         {/* Support (§21) */}
         <section aria-labelledby="support-heading">
-          <h2 id="support-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="support-heading" className="eyebrow mb-3">
             Support
           </h2>
           <Card>
-            <ul className="divide-y divide-surface-100">
+            <ul className="divide-y divide-surface-200">
               <li>
                 <button
                   type="button"
                   onClick={() => navigate('/support')}
-                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-50"
+                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-100"
                 >
                   <span className="flex items-center gap-3">
                     <LifeBuoy className="h-4 w-4 text-surface-400" aria-hidden />
@@ -386,7 +386,7 @@ export function AccountPage() {
                 <button
                   type="button"
                   onClick={() => navigate('/help')}
-                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-50"
+                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition-colors hover:bg-surface-100"
                 >
                   <span className="flex items-center gap-3">
                     <MessageCircleQuestion className="h-4 w-4 text-surface-400" aria-hidden />
@@ -396,6 +396,14 @@ export function AccountPage() {
               </li>
             </ul>
           </Card>
+        </section>
+
+        {/* Community — official Telegram channel (opens in a new tab). */}
+        <section aria-labelledby="community-heading">
+          <h2 id="community-heading" className="eyebrow mb-3">
+            Community
+          </h2>
+          <TelegramCommunityCard />
         </section>
 
         <Button

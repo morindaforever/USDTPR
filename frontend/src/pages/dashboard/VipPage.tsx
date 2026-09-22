@@ -99,7 +99,7 @@ export function VipPage() {
     <PageContainer title="VIP Plans" subtitle="Choose a plan that matches your available balance.">
       <div className="space-y-6">
         {/* Notice — plans are configuration terms */}
-        <div className="flex gap-3 rounded-xl bg-sky-50 p-3.5 text-sky-900 ring-1 ring-inset ring-sky-200">
+        <div className="flex gap-3 rounded-xl bg-info-50 p-3.5 text-info-900 ring-1 ring-inset ring-sky-200">
           <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
           <div className="text-sm">
             <p className="font-semibold">VIP Plans</p>
@@ -111,11 +111,11 @@ export function VipPage() {
 
         {/* Success screen */}
         {success && (
-          <section className="rounded-2xl border border-brand-200 bg-white p-5 text-center">
+          <section className="rounded-2xl border border-brand-500/25 bg-surface-50 p-5 text-center">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600">
               <Crown className="h-6 w-6" aria-hidden />
             </div>
-            <h2 className="mt-3 text-lg font-semibold text-surface-900">VIP Plan Activated</h2>
+            <h2 className="mt-3 text-lg font-semibold text-surface-800">VIP Plan Activated</h2>
             <p className="mt-1 text-sm text-surface-500">
               {success.purchase.plan_name} is now active. Your first reward will be
               credited by the daily reward run.
@@ -125,7 +125,7 @@ export function VipPage() {
                 <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
                   Investment
                 </dt>
-                <dd className="mt-0.5 font-semibold tabular-nums text-surface-900">
+                <dd className="mt-0.5 font-semibold tabular-nums text-surface-800">
                   {Number(success.purchase.investment_amount) === 0
                     ? 'Free'
                     : `${formatUsdt(success.purchase.investment_amount)} USDT`}
@@ -135,7 +135,7 @@ export function VipPage() {
                 <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
                   Target
                 </dt>
-                <dd className="mt-0.5 font-semibold tabular-nums text-surface-900">
+                <dd className="mt-0.5 font-semibold tabular-nums text-surface-800">
                   {formatUsdt(success.purchase.target_amount)} USDT
                 </dd>
               </div>
@@ -143,7 +143,7 @@ export function VipPage() {
                 <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
                   Daily rate
                 </dt>
-                <dd className="mt-0.5 font-semibold tabular-nums text-surface-900">
+                <dd className="mt-0.5 font-semibold tabular-nums text-surface-800">
                   {success.purchase.daily_rate_percent}%
                 </dd>
               </div>
@@ -151,7 +151,7 @@ export function VipPage() {
                 <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
                   Purchase ID
                 </dt>
-                <dd className="mt-0.5 truncate font-mono text-xs font-semibold text-surface-900">
+                <dd className="mt-0.5 truncate font-mono text-xs font-semibold text-surface-800">
                   {success.purchase.purchase_id}
                 </dd>
               </div>
@@ -170,7 +170,7 @@ export function VipPage() {
               <button
                 type="button"
                 onClick={() => navigate('/home')}
-                className="flex-1 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-700"
+                className="flex-1 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-surface-800 shadow-sm transition-colors hover:bg-brand-700"
               >
                 Go to Dashboard
               </button>
@@ -180,7 +180,7 @@ export function VipPage() {
 
         {/* Active plans */}
         <section aria-labelledby="active-vip-heading">
-          <h2 id="active-vip-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="active-vip-heading" className="eyebrow mb-3">
             Active Plans
           </h2>
           {activeQuery.isLoading ? (
@@ -188,7 +188,7 @@ export function VipPage() {
               <Skeleton className="h-36 w-full" />
             </div>
           ) : activeQuery.error ? (
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 text-center">
+            <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 text-center">
               <p className="flex items-center justify-center gap-2 text-sm text-surface-600">
                 <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
                 Unable to load your active plans.
@@ -216,7 +216,7 @@ export function VipPage() {
 
         {/* Plan grid */}
         <section aria-labelledby="plans-heading">
-          <h2 id="plans-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="plans-heading" className="eyebrow mb-3">
             Available Plans
           </h2>
           {plansQuery.isLoading ? (
@@ -226,7 +226,7 @@ export function VipPage() {
               ))}
             </div>
           ) : plansQuery.error ? (
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 text-center">
+            <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 text-center">
               <p className="flex items-center justify-center gap-2 text-sm text-surface-600">
                 <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
                 Unable to load VIP plans.
@@ -262,7 +262,7 @@ export function VipPage() {
 
         {/* Reward history (Section 8) */}
         <section aria-labelledby="reward-history-heading">
-          <h2 id="reward-history-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="reward-history-heading" className="eyebrow mb-3">
             Reward History
           </h2>
           {rewardsQuery.isLoading ? (
@@ -271,7 +271,7 @@ export function VipPage() {
               <Skeleton className="h-16 w-full rounded-2xl" />
             </div>
           ) : rewardsQuery.error ? (
-            <div className="rounded-2xl border border-surface-200 bg-white p-5 text-center">
+            <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 text-center">
               <p className="flex items-center justify-center gap-2 text-sm text-surface-600">
                 <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
                 Unable to load reward history.
@@ -291,7 +291,7 @@ export function VipPage() {
 
         {/* Purchase history */}
         <section aria-labelledby="vip-history-heading">
-          <h2 id="vip-history-heading" className="mb-3 text-sm font-semibold text-surface-900">
+          <h2 id="vip-history-heading" className="eyebrow mb-3">
             Purchase History
           </h2>
           {historyQuery.isLoading ? (
@@ -300,7 +300,7 @@ export function VipPage() {
               <Skeleton className="h-16 w-full rounded-2xl" />
             </div>
           ) : historyQuery.error ? (
-            <p className="rounded-2xl border border-surface-200 bg-white p-5 text-center text-sm text-surface-600">
+            <p className="rounded-2xl border border-surface-200 bg-surface-50 p-5 text-center text-sm text-surface-600">
               Unable to load purchase history.
             </p>
           ) : (

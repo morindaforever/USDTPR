@@ -3,10 +3,10 @@ import { VipProgressBar } from './VipProgressBar';
 import type { VipPurchase } from '@/types';
 
 const STATUS_TONES: Record<VipPurchase['status'], string> = {
-  ACTIVE: 'bg-brand-50 text-brand-700 ring-brand-200',
-  PENDING: 'bg-amber-50 text-amber-700 ring-amber-200',
-  COMPLETED: 'bg-sky-50 text-sky-700 ring-sky-200',
-  CANCELLED: 'bg-surface-100 text-surface-500 ring-surface-200',
+  ACTIVE: 'bg-brand-500/12 text-brand-400 ring-brand-500/30',
+  PENDING: 'bg-accent-500/12 text-accent-600 ring-accent-500/30',
+  COMPLETED: 'bg-info-500/12 text-info-600 ring-info-500/30',
+  CANCELLED: 'bg-surface-200 text-surface-500 ring-surface-300',
 };
 
 /**
@@ -20,10 +20,10 @@ export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
   const isWelcome = purchase.investment_amount === '0.00000000';
 
   return (
-    <div className="rounded-2xl border border-brand-200 bg-white p-5">
+    <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 shadow-card">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-surface-900">{purchase.plan_name}</h3>
+          <h3 className="text-base font-semibold text-surface-800">{purchase.plan_name}</h3>
           <p className="mt-0.5 text-xs text-surface-500">
             {isWelcome
               ? `Promotional — welcome reward target ${formatUsdt(purchase.target_amount)} USDT (not investment profit)`
@@ -40,19 +40,19 @@ export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-        <div className="rounded-xl bg-surface-50 p-3">
+        <div className="rounded-xl border border-surface-200 bg-surface-900/50 p-3">
           <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
             Daily Return
           </dt>
-          <dd className="mt-0.5 font-semibold tabular-nums text-surface-900">
+          <dd className="mt-0.5 font-semibold tabular-nums text-surface-800">
             {purchase.daily_rate_percent}%
           </dd>
         </div>
-        <div className="rounded-xl bg-surface-50 p-3">
+        <div className="rounded-xl border border-surface-200 bg-surface-900/50 p-3">
           <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
             Daily Reward
           </dt>
-          <dd className="mt-0.5 font-semibold tabular-nums text-brand-700">
+          <dd className="mt-0.5 font-semibold tabular-nums text-brand-400">
             {formatUsdt(
               purchase.daily_reward_amount ??
                 (Number(purchase.target_amount) * Number(purchase.daily_rate)).toFixed(2),
@@ -60,11 +60,11 @@ export function ActiveVipCard({ purchase }: { purchase: VipPurchase }) {
             USDT
           </dd>
         </div>
-        <div className="rounded-xl bg-surface-50 p-3">
+        <div className="rounded-xl border border-surface-200 bg-surface-900/50 p-3">
           <dt className="text-[11px] font-medium uppercase tracking-wide text-surface-500">
             {isCompleted ? 'Completed' : 'Started'}
           </dt>
-          <dd className="mt-0.5 font-semibold text-surface-900">
+          <dd className="mt-0.5 font-semibold text-surface-800">
             {isCompleted
               ? purchase.completed_at
                 ? formatDate(purchase.completed_at)

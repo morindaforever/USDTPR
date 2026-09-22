@@ -172,7 +172,7 @@ export function AdminRewardsPage() {
             {expanded.error_info && (
               <div>
                 <p className="mb-1 text-xs font-medium text-surface-400">Error information (staff only)</p>
-                <p className="rounded-xl bg-white/5 p-3 text-xs text-surface-300">{expanded.error_info}</p>
+                <p className="rounded-xl bg-surface-200/40 p-3 text-xs text-surface-300">{expanded.error_info}</p>
               </div>
             )}
             {expanded.status === 'FAILED' && (

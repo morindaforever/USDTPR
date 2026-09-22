@@ -20,7 +20,7 @@ export function Spinner({
 }) {
   return (
     <span role="status" aria-live="polite" className={cn('inline-flex', className)}>
-      <Loader2 className={cn('animate-spin text-brand-600', SIZE_CLASSES[size])} />
+      <Loader2 className={cn('animate-spin text-brand-400', SIZE_CLASSES[size])} />
       <span className="sr-only">{label}</span>
     </span>
   );

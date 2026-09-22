@@ -94,9 +94,9 @@ export function AdminSupportConversationPage() {
           actions={conversation && <AdminStatusBadge status={conversation.status} />}
         />
 
-        {query.isLoading && <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-white/5" />)}</div>}
+        {query.isLoading && <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-surface-200/40" />)}</div>}
         {query.error && (
-          <div className="rounded-2xl border border-white/10 bg-surface-900 p-6 text-center">
+          <div className="rounded-2xl border border-surface-200 bg-surface-50 p-6 text-center">
             <p className="text-sm text-surface-300">{query.error}</p>
             <Button variant="secondary" size="sm" className="mt-3" onClick={query.retry}>Retry</Button>
             <Button variant="ghost" size="sm" className="mt-3 ml-2" onClick={() => navigate('/admin/support')}>Back</Button>
@@ -108,13 +108,13 @@ export function AdminSupportConversationPage() {
             {/* Message thread (oldest → newest, §36/§34) */}
             <div className="space-y-2">
               {conversation.messages.length === 0 && (
-                <p className="rounded-2xl border border-dashed border-white/10 p-6 text-center text-sm text-surface-400">No messages yet</p>
+                <p className="rounded-2xl border border-dashed border-surface-200 p-6 text-center text-sm text-surface-400">No messages yet</p>
               )}
               {conversation.messages.map((message) => {
                 const isStaff = message.sender_type === 'support';
                 return (
                   <div key={message.id} className={`flex ${isStaff ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${isStaff ? 'bg-brand-600/20 text-surface-100' : 'bg-surface-900 text-surface-200'}`}>
+                    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${isStaff ? 'bg-brand-600/20 text-surface-100' : 'bg-surface-50 text-surface-200'}`}>
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-surface-500">
                         {isStaff ? 'Support' : `User ${message.sender_id}`} · {formatDateTime(message.created_at)}
                       </p>
@@ -129,7 +129,7 @@ export function AdminSupportConversationPage() {
 
             {/* Reply composer (hidden on closed, §48) */}
             {conversation.status !== 'CLOSED' ? (
-              <div className="rounded-2xl border border-white/10 bg-surface-900 p-3">
+              <div className="rounded-2xl border border-surface-200 bg-surface-50 p-3">
                 <label htmlFor="admin-reply" className="mb-2 block text-xs font-medium text-surface-400">Reply as support</label>
                 <textarea
                   id="admin-reply"
@@ -137,7 +137,7 @@ export function AdminSupportConversationPage() {
                   rows={3}
                   maxLength={2000}
                   onChange={(e) => setReply(e.target.value)}
-                  className="w-full resize-none rounded-xl border border-white/10 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
+                  className="w-full resize-none rounded-xl border border-surface-200 bg-surface-950 px-3 py-2.5 text-sm text-surface-100 focus:border-brand-500 focus:outline-none"
                 />
                 <div className="mt-2 flex items-center justify-between">
                   <p className="text-[11px] text-surface-500">Replying notifies the user.</p>
@@ -147,7 +147,7 @@ export function AdminSupportConversationPage() {
                 </div>
               </div>
             ) : (
-              <p className="rounded-2xl border border-white/10 bg-surface-900 p-3 text-center text-xs text-surface-400">This conversation is closed.</p>
+              <p className="rounded-2xl border border-surface-200 bg-surface-50 p-3 text-center text-xs text-surface-400">This conversation is closed.</p>
             )}
 
             {/* Status transitions (§48) */}

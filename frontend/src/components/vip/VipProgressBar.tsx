@@ -29,7 +29,7 @@ export function VipProgressBar({ rewarded, target, percent, label = 'Progress' }
         aria-valuenow={Math.round(pct)}
         aria-valuemin={0}
         aria-valuemax={100}
-        className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-100"
+        className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-200"
       >
         <div
           className="h-full rounded-full bg-brand-500 transition-[width] duration-500 ease-out"

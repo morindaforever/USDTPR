@@ -14,7 +14,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 /** Styled text input — the base of every form. Password fields get an
- * accessible show/hide toggle (Section 15 §6). */
+ * accessible show/hide toggle. */
 export function Input({
   label,
   hint,
@@ -37,14 +37,14 @@ export function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="text-sm font-medium text-surface-900"
+          className="text-[13px] font-medium text-surface-600"
         >
           {label}
         </label>
       )}
       <div className="relative">
         {leadingIcon && (
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-surface-400">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-surface-500">
             {leadingIcon}
           </span>
         )}
@@ -54,13 +54,13 @@ export function Input({
           aria-invalid={Boolean(error)}
           aria-describedby={error || hint ? messageId : undefined}
           className={cn(
-            'h-11 w-full rounded-xl border bg-white px-3.5 text-sm text-surface-900',
-            'placeholder:text-surface-400 transition-colors',
+            'h-11 w-full rounded-xl border bg-surface-100 px-3.5 text-sm text-surface-800',
+            'placeholder:text-surface-500 transition-colors caret-brand-400',
             'focus:outline-none focus:ring-2 focus:ring-offset-0',
-            'disabled:cursor-not-allowed disabled:bg-surface-50 disabled:text-surface-400',
+            'disabled:cursor-not-allowed disabled:bg-surface-200 disabled:text-surface-500',
             error
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-500/30'
-              : 'border-surface-200 focus:border-brand-500 focus:ring-brand-500/30',
+              ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-500/30'
+              : 'border-surface-200 hover:border-surface-300 focus:border-brand-500/60 focus:ring-brand-500/25',
             leadingIcon && 'pl-10',
             isPassword && 'pr-11',
             className,
@@ -73,7 +73,7 @@ export function Input({
             onClick={() => setShowPassword((visible) => !visible)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             aria-pressed={showPassword}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-surface-400 transition-colors hover:text-surface-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-surface-500 transition-colors hover:text-surface-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40"
           >
             {showPassword ? (
               <EyeOff className="h-4 w-4" aria-hidden />
@@ -86,7 +86,7 @@ export function Input({
       {(error || hint) && (
         <p
           id={messageId}
-          className={cn('text-xs', error ? 'text-red-600' : 'text-surface-500')}
+          className={cn('text-xs', error ? 'text-danger-600' : 'text-surface-500')}
         >
           {error ?? hint}
         </p>

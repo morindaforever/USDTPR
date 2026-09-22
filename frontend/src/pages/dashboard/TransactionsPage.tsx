@@ -58,14 +58,14 @@ function TransactionRow({ row }: { row: WalletTransaction }) {
   return (
     <Link
       to={`/transactions/${encodeURIComponent(row.transaction_id)}`}
-      className="block transition-colors hover:bg-surface-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
+      className="block transition-colors hover:bg-surface-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
     >
       {/* Mobile card layout — no horizontal overflow at 320px (§3, §45). */}
       <div className="flex items-center gap-3 px-4 py-3 md:hidden">
         <span
           className={cn(
             'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-            isCredit ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-100 text-surface-600',
+            isCredit ? 'bg-brand-500/10 text-brand-400' : 'bg-surface-100 text-surface-600',
           )}
         >
           {isCredit ? (
@@ -76,7 +76,7 @@ function TransactionRow({ row }: { row: WalletTransaction }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-semibold text-surface-900">{typeLabel(row.type)}</p>
+            <p className="truncate text-sm font-semibold text-surface-800">{typeLabel(row.type)}</p>
             <Badge tone={statusTone(row.status)}>{row.status.toLowerCase()}</Badge>
           </div>
           <p className="mt-0.5 truncate text-[11px] text-surface-500">{formatDateTime(row.created_at)}</p>
@@ -84,7 +84,7 @@ function TransactionRow({ row }: { row: WalletTransaction }) {
         <p
           className={cn(
             'shrink-0 text-sm font-semibold tabular-nums',
-            isCredit ? 'text-emerald-700' : 'text-surface-900',
+            isCredit ? 'text-brand-400' : 'text-surface-800',
           )}
         >
           {isCredit ? '+' : '−'}
@@ -95,13 +95,13 @@ function TransactionRow({ row }: { row: WalletTransaction }) {
       {/* Desktop row. */}
       <div className="hidden items-center gap-4 px-4 py-3 md:flex">
         <div className="w-44 min-w-0">
-          <p className="truncate text-sm font-semibold text-surface-900">{typeLabel(row.type)}</p>
+          <p className="truncate text-sm font-semibold text-surface-800">{typeLabel(row.type)}</p>
           <p className="truncate text-[11px] text-surface-400">{row.transaction_id}</p>
         </div>
         <p
           className={cn(
             'w-36 shrink-0 text-sm font-semibold tabular-nums',
-            isCredit ? 'text-emerald-700' : 'text-surface-900',
+            isCredit ? 'text-brand-400' : 'text-surface-800',
           )}
         >
           {isCredit ? '+' : '−'}
@@ -173,7 +173,7 @@ export function TransactionsPage() {
               placeholder="Search by ID, description, or reference…"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full rounded-xl border border-surface-200 bg-white px-3.5 py-2.5 text-sm text-surface-800 placeholder:text-surface-400 focus:border-brand-500 focus:outline-none"
+              className="w-full rounded-xl border border-surface-200 bg-surface-50 px-3.5 py-2.5 text-sm text-surface-800 placeholder:text-surface-500 focus:border-brand-500 focus:outline-none"
             />
           </form>
           <div className="flex flex-wrap gap-2">
@@ -186,8 +186,8 @@ export function TransactionsPage() {
                 className={cn(
                   'rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors',
                   type === opt.value
-                    ? 'border-brand-600 bg-brand-600 text-white'
-                    : 'border-surface-200 bg-white text-surface-600 hover:bg-surface-50',
+                    ? 'border-brand-600 bg-brand-600 text-surface-800'
+                    : 'border-surface-200 bg-surface-50 text-surface-600 hover:bg-surface-100',
                 )}
               >
                 {opt.label}
@@ -199,7 +199,7 @@ export function TransactionsPage() {
               aria-label="Filter by status"
               value={status}
               onChange={(e) => changeFilter(() => setStatus(e.target.value))}
-              className="rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-medium text-surface-700 focus:border-brand-500 focus:outline-none"
+              className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-xs font-medium text-surface-700 focus:border-brand-500 focus:outline-none"
             >
               <option value="">All statuses</option>
               {STATUS_OPTIONS.map((opt) => (
@@ -214,7 +214,7 @@ export function TransactionsPage() {
               value={dateFrom}
               max={dateTo || undefined}
               onChange={(e) => changeFilter(() => setDateFrom(e.target.value))}
-              className="rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-medium text-surface-700 focus:border-brand-500 focus:outline-none"
+              className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-xs font-medium text-surface-700 focus:border-brand-500 focus:outline-none"
             />
             <input
               type="date"
@@ -222,7 +222,7 @@ export function TransactionsPage() {
               value={dateTo}
               min={dateFrom || undefined}
               onChange={(e) => changeFilter(() => setDateTo(e.target.value))}
-              className="rounded-xl border border-surface-200 bg-white px-3 py-2 text-xs font-medium text-surface-700 focus:border-brand-500 focus:outline-none"
+              className="rounded-xl border border-surface-200 bg-surface-50 px-3 py-2 text-xs font-medium text-surface-700 focus:border-brand-500 focus:outline-none"
             />
           </div>
         </div>
@@ -238,7 +238,7 @@ export function TransactionsPage() {
             <ErrorState message={error} onRetry={retry} />
           ) : !data || data.rows.length === 0 ? (
             <div className="px-4 py-12 text-center">
-              <p className="text-sm font-semibold text-surface-900">No transactions yet.</p>
+              <p className="text-sm font-semibold text-surface-800">No transactions yet.</p>
               <p className="mt-1 text-xs text-surface-500">
                 Your wallet activity will appear here.
               </p>
@@ -246,14 +246,14 @@ export function TransactionsPage() {
           ) : (
             <div>
               {/* Desktop header. */}
-              <div className="hidden items-center gap-4 border-b border-surface-100 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-surface-400 md:flex">
+              <div className="hidden items-center gap-4 border-b border-surface-200 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-surface-400 md:flex">
                 <span className="w-44">Type</span>
                 <span className="w-36">Amount</span>
                 <span className="w-24">Status</span>
                 <span className="flex-1">Description</span>
                 <span>Date</span>
               </div>
-              <ul className="divide-y divide-surface-100">
+              <ul className="divide-y divide-surface-200">
                 {data.rows.map((row) => (
                   <li key={row.transaction_id}>
                     <TransactionRow row={row} />
@@ -264,12 +264,12 @@ export function TransactionsPage() {
           )}
 
           {pagination && pagination.pages > 1 && !isLoading && !error && (
-            <div className="flex items-center justify-between border-t border-surface-100 px-4 py-3">
+            <div className="flex items-center justify-between border-t border-surface-200 px-4 py-3">
               <button
                 type="button"
                 disabled={pagination.page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="inline-flex items-center gap-1 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
                 Prev
@@ -281,7 +281,7 @@ export function TransactionsPage() {
                 type="button"
                 disabled={pagination.page >= pagination.pages}
                 onClick={() => setPage((p) => p + 1)}
-                className="inline-flex items-center gap-1 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="inline-flex items-center gap-1 rounded-lg border border-surface-200 px-3 py-1.5 text-xs font-semibold text-surface-700 transition-colors hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
                 <ChevronRight className="h-3.5 w-3.5" aria-hidden />

@@ -38,10 +38,10 @@ export function RecentTransactions() {
     <Card>
       <div className="p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-surface-900">Recent Transactions</h2>
+          <h2 className="text-sm font-semibold text-surface-800">Recent Transactions</h2>
           <Link
             to="/transactions"
-            className="inline-flex items-center gap-0.5 text-xs font-semibold text-brand-700 hover:text-brand-800"
+            className="inline-flex items-center gap-0.5 text-xs font-semibold text-brand-400 hover:text-brand-300"
           >
             View All
             <ChevronRight className="h-3.5 w-3.5" aria-hidden />
@@ -70,7 +70,7 @@ export function RecentTransactions() {
             No transactions yet — your wallet activity will appear here.
           </p>
         ) : (
-          <ul className="mt-4 divide-y divide-surface-100">
+          <ul className="mt-4 divide-y divide-surface-200">
             {rows.map((row) => {
               const isCredit = row.direction === 'CREDIT';
               return (
@@ -82,7 +82,7 @@ export function RecentTransactions() {
                     <span
                       className={cn(
                         'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-                        isCredit ? 'bg-emerald-50 text-emerald-600' : 'bg-surface-100 text-surface-600',
+                        isCredit ? 'bg-brand-500/10 text-brand-400' : 'bg-surface-100 text-surface-600',
                       )}
                     >
                       {isCredit ? (
@@ -92,15 +92,15 @@ export function RecentTransactions() {
                       )}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-surface-900">
+                      <p className="truncate text-sm font-medium text-surface-800">
                         {TYPE_LABELS[row.type] ?? row.type}
                       </p>
-                      <p className="text-[11px] text-surface-400">{formatDateTime(row.created_at)}</p>
+                      <p className="text-[11px] text-surface-500">{formatDateTime(row.created_at)}</p>
                     </div>
                     <p
                       className={cn(
                         'shrink-0 text-sm font-semibold tabular-nums',
-                        isCredit ? 'text-emerald-700' : 'text-surface-900',
+                        isCredit ? 'text-brand-400' : 'text-surface-800',
                       )}
                     >
                       {isCredit ? '+' : '−'}

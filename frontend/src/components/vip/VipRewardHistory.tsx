@@ -2,10 +2,10 @@ import { formatDate, formatUsdt } from '@/utils/format';
 import type { VipReward } from '@/types';
 
 const STATUS_TONES: Record<VipReward['status'], string> = {
-  PENDING: 'bg-amber-50 text-amber-700 ring-amber-200',
-  COMPLETED: 'bg-brand-50 text-brand-700 ring-brand-200',
-  FAILED: 'bg-red-50 text-red-700 ring-red-200',
-  REVERSED: 'bg-surface-100 text-surface-500 ring-surface-200',
+  PENDING: 'bg-accent-200 text-accent-700 ring-accent-500/30',
+  COMPLETED: 'bg-brand-500/12 text-brand-400 ring-brand-500/30',
+  FAILED: 'bg-danger-50 text-danger-700 ring-danger-500/30',
+  REVERSED: 'bg-surface-100 text-surface-500 ring-surface-300',
 };
 
 /**
@@ -27,10 +27,10 @@ export function VipRewardHistory({ rewards }: { rewards: VipReward[] }) {
       {rewards.map((reward) => (
         <li
           key={reward.reward_id}
-          className="flex items-center justify-between gap-3 rounded-2xl border border-surface-200 bg-white p-4"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-surface-200 bg-surface-50 p-4"
         >
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-surface-900">
+            <p className="truncate text-sm font-semibold text-surface-800">
               {reward.plan_name}
               <span className="ml-2 text-[11px] font-normal text-surface-400">
                 {reward.reward_id}
@@ -46,7 +46,7 @@ export function VipRewardHistory({ rewards }: { rewards: VipReward[] }) {
             </p>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-sm font-semibold tabular-nums text-brand-700">
+            <p className="text-sm font-semibold tabular-nums text-brand-400">
               +{formatUsdt(reward.credited_amount)} USDT
             </p>
             <span
