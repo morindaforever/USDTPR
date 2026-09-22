@@ -3,6 +3,7 @@ import { AlertTriangle, RefreshCw, Users } from 'lucide-react';
 import { PageContainer } from '@/components';
 import { Skeleton, useDashboardData } from '@/hooks';
 import { referralService } from '@/services/referralService';
+import { buildReferralLink } from '@/utils/referral';
 import {
   CommissionHistory,
   ReferralLinkCard,
@@ -72,6 +73,9 @@ export function TeamPage() {
   }, [loadCommissions]);
 
   const summary = summaryQuery.data;
+  // Built from the runtime browser origin so the link always matches the
+  // deployed domain (never localhost) — the code itself comes from the API.
+  const referralLink = summary ? buildReferralLink(summary.referral_code) : '';
   const members = teamData?.data ?? [];
   const pagination = teamData?.pagination;
   const commissionItems = commissions?.data ?? [];
@@ -110,7 +114,7 @@ export function TeamPage() {
           </div>
         ) : summary ? (
           <>
-            <ReferralLinkCard link={summary.referral_link} code={summary.referral_code} />
+            <ReferralLinkCard link={referralLink} code={summary.referral_code} />
             <TeamStats summary={summary} />
           </>
         ) : null}

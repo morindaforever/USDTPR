@@ -19,6 +19,7 @@ import { Badge, Button, Card, PageContainer, TelegramCommunityCard } from '@/com
 import { Skeleton, useDashboardData } from '@/hooks';
 import { useAuth } from '@/context/AuthContext';
 import { accountService } from '@/services/accountService';
+import { buildReferralLink } from '@/utils/referral';
 import { formatUsdt, formatDate } from '@/utils/format';
 import type { AccountActivityEntry } from '@/types';
 
@@ -45,12 +46,11 @@ export function AccountPage() {
     { enabled: currentUser !== null },
   );
 
-  // Referral link built from the Section 9 backend base URL convention.
+  // Referral link built from the runtime browser origin (always the actual
+  // deployed domain — never a hardcoded or env-pinned localhost).
   const [referralLink, setReferralLink] = useState('');
   useEffect(() => {
-    const base = (import.meta.env.VITE_PUBLIC_APP_URL as string | undefined)?.replace(/\/$/, '')
-      ?? window.location.origin;
-    if (currentUser) setReferralLink(`${base}/signup?ref=${encodeURIComponent(currentUser.referral_code)}`);
+    if (currentUser) setReferralLink(buildReferralLink(currentUser.referral_code));
   }, [currentUser]);
 
   // Copied feedback (code + link)

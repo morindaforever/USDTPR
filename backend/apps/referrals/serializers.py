@@ -24,13 +24,24 @@ class TeamMemberSerializer(serializers.Serializer):
     joined_at = serializers.DateTimeField(source='created_at')
 
 
+_DEV_FALLBACK_BASE = 'http://localhost:5173'  # Vite dev-server default
+
+
 def build_referral_link(code: str) -> str:
     """Public signup link for a referral code (§4).
 
-    Base URL comes from the PUBLIC_APP_URL environment setting — never a
-    hard-coded production domain. The code is URL-encoded.
+    Base URL comes from the PUBLIC_APP_URL (or FRONTEND_URL) environment
+    setting — never a hard-coded production domain. The code is URL-encoded.
+
+    If the base is unconfigured, DEBUG environments fall back to the local
+    Vite server; production returns a relative path so a localhost or wrong
+    domain can never leak into a user-facing link.
     """
-    return f"{dj_settings.PUBLIC_APP_URL.rstrip('/')}/signup?ref={quote(code)}"
+    path = f"/signup?ref={quote(code)}"
+    base = dj_settings.PUBLIC_APP_URL.rstrip('/')
+    if not base:
+        return f"{_DEV_FALLBACK_BASE}{path}" if dj_settings.DEBUG else path
+    return f"{base}{path}"
 
 
 class ReferralSummarySerializer(serializers.Serializer):

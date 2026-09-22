@@ -310,4 +310,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Public URL of the frontend — used to build shareable referral links
 # (Section 9 §4). Never hard-code a production domain; set per environment.
-PUBLIC_APP_URL = env('PUBLIC_APP_URL', default='http://localhost:5173')
+# FRONTEND_URL is accepted as an alias. Unset + DEBUG → localhost (Vite dev
+# default); unset in production → relative links, so a localhost/wrong
+# domain can never leak into user-facing URLs.
+PUBLIC_APP_URL = env('PUBLIC_APP_URL', default='') or env('FRONTEND_URL', default='')

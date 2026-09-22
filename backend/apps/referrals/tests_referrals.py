@@ -358,6 +358,32 @@ class ReferralAPITests(ReferralChainTestCase):
         self.assertEqual(data['level_counts']['1'], 1)
         self.assertEqual(data['commission_rates']['1'], '10.00')
 
+    def test_referral_link_never_leaks_localhost_in_production(self) -> None:
+        """Unconfigured PUBLIC_APP_URL in production → relative path, not localhost."""
+        from django.test import override_settings
+
+        from .serializers import build_referral_link
+
+        self._auth(self.a)
+        with override_settings(PUBLIC_APP_URL='', DEBUG=False):
+            self.assertEqual(build_referral_link('ABC123'), '/signup?ref=ABC123')
+            response = self.client.get('/api/referrals/summary/')
+            self.assertEqual(response.status_code, 200)
+            link = response.json()['data']['referral_link']
+            self.assertTrue(link.startswith('/signup?ref='), link)
+            self.assertNotIn('localhost', link)
+            self.assertNotIn('http', link)
+
+    def test_referral_link_uses_configured_base_and_encodes_code(self) -> None:
+        from django.test import override_settings
+
+        from .serializers import build_referral_link
+
+        with override_settings(PUBLIC_APP_URL='https://nexus.example.com/'):
+            self.assertEqual(build_referral_link('ABC123'), 'https://nexus.example.com/signup?ref=ABC123')
+        with override_settings(PUBLIC_APP_URL='', DEBUG=True):
+            self.assertEqual(build_referral_link('ABC123'), 'http://localhost:5173/signup?ref=ABC123')
+
     def test_team_isolation(self) -> None:
         stranger = _mk('api-stranger@example.com', 3001)
         self._auth(stranger)
